@@ -1,8 +1,9 @@
 /* Author: Are Oelsner
- * Networks Project 2
+ * Networks Project 3
  */
 
 #include "NetworkHeader.h"
+#include "Packet.cpp"
 
 /* function declarations */
 
@@ -60,87 +61,92 @@ int main (int argc, char *argv[]) {
   /* Networking code starts here */
   /// Variables
   int m_soc;                        // Socket id
-  struct sockaddr_in m_sockaddr_in; // sockaddr_in
-  char m_msg[BUFFSIZE];             // Outgoing HELLO message
+
+  struct sockaddr_in srcAddr;       // sockaddr_in received
+  struct sockaddr_in destAddr;      // sockaddr_in sent
+
+  Packet p_query;                     // Outgoing Packet
+  char m_query[BUFFSIZE];             // Outgoing message
+
+  Packet p_rcv;                     // Incoming Packet
   char m_rcv[BUFFSIZE];             // Incoming ACK message buffer
-  char m_bye[BUFFSIZE];             // Outgoing BYE message
+
+  unsigned int fromSize;            // Size of received packet
   int m_bytesReceived;              // Bytes received
   int m_totalBytesReceived;         // Tota bytes received
 
 
+
   /// Create a TCP socket
-  if((m_soc = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
+  if((m_soc = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
     DieWithError((char*)"socket() failed");
 
 
   /// Construct Server Address Structure
-  memset(&m_sockaddr_in, 0, sizeof(m_sockaddr_in));       // Zeros out structure
-  m_sockaddr_in.sin_family = AF_INET;                     // Internet protocol 
-  m_sockaddr_in.sin_port = htons(serverPort);             // Address port 16 bits
+  memset(&destAddr, 0, sizeof(destAddr));       // Zeros out structure
+  destAddr.sin_family = AF_INET;                     // Internet protocol 
+  destAddr.sin_port = htons(serverPort);             // Address port 16 bits
 
   // Handles both IP and name address input
   // www.cplusplus.com/forum/general/92837/
   if((remoteHost = gethostbyname(hostName)) != NULL) {  // If host is domain name
-    m_sockaddr_in.sin_addr.s_addr =  *((unsigned long *) remoteHost->h_addr_list[0]);
+    destAddr.sin_addr.s_addr =  *((unsigned long *) remoteHost->h_addr_list[0]);
     printf("Name: %u\n", *remoteHost->h_addr_list[0]);
-  //printf("Name: %s, \t addr: %u\n", remoteHost->h_addr, address);
   }
   else { // Host address is address
     addr = inet_addr(hostName);   // converts format of address to binary
     remoteHost = gethostbyaddr((char *)&addr, 4, AF_INET);
-    m_sockaddr_in.sin_addr.s_addr = addr;  // Internet Address 32 bits
+    destAddr.sin_addr.s_addr = addr;  // Internet Address 32 bits
     printf("Address: %s, \t addr: %u\n", hostName, addr);
   }
 
 
-  /// Establish a connection to the server
-  // int connect(int socket, struct sockaddr *foreignAddress, unsigned int addressLength)
-  if(connect(m_soc, (struct sockaddr *)&m_sockaddr_in, sizeof(m_sockaddr_in)) < 0)
-    DieWithError((char*)"connect() failed");
-
-
   /// Communication with server
-  // Creates HELLO message
+  // Creates Query message
   char * m_vers = (char*)"CS332 ";
   char * m_type = (char*)"HELLO ";
-  strcpy(m_msg, m_vers);            // Sets version field
-  strcat(m_msg, m_type);            // Sets type field
-  strcat(m_msg, firstName);         // Sets first name field
-  strcat(m_msg, " ");
-  strcat(m_msg, lastName);          // Sets last name field
-  strcat(m_msg, "\n");
-  //printf("Hello message: %s/n", m_msg);
+  strcpy(m_query, m_vers);            // Sets version field
+  strcat(m_query, m_type);            // Sets type field
+  strcat(m_query, firstName);         // Sets first name field
+  strcat(m_query, " ");
+  strcat(m_query, lastName);          // Sets last name field
+  strcat(m_query, "\n");
+  //printf("Query message: %s/n", m_query);
 
 
   // Send message
-  if(send(m_soc, m_msg, strlen(m_msg), 0) != (unsigned int)strlen(m_msg))
-    DieWithError((char*)"send() sent a different number of bytes than expected");
+  if(sendto(m_soc, m_query, strlen(m_query), 0, (struct sockaddr *)&destAddr, sizeof(destAddr)) != (unsigned int)strlen(m_query))
+    DieWithError((char*)"sendto() sent a different number of bytes than expected");
 
   //change to while((m_bytesReceived = recv(m_soc, m_rcv, BUFFSIZE-1, 0)) <= 0)
   // Receive Message
+  fromSize = sizeof(srcAddr);
   m_totalBytesReceived = 0;
   printf("ServerMessage: ");
   while(strchr(m_rcv, '\n') == NULL) {
-    if((m_bytesReceived = recv(m_soc, m_rcv, BUFFSIZE-1, 0)) <= 0)
+    if((m_bytesReceived = recvfrom(m_soc, m_rcv, BUFFSIZE-1, 0, (struct sockaddr *)&srcAddr, &fromSize)) <= 0)
       DieWithError((char*)"recv() failed or connection closed prematurely");
     m_totalBytesReceived += m_bytesReceived;
     m_rcv[m_bytesReceived] = '\0'; 
     printf("%s", m_rcv);
   }
   printf("\n");
+  if(destAddr.sin_addr.s_addr != srcAddr.sin_addr.s_addr) {
+    DieWithError((char*)"Error: received a packet from unknown source.\n");
+  }
 
-  // Creates BYE message
-  m_type = strtok(m_rcv, " ");
-  char * m_cookie = strtok(NULL, " ");
-  strcpy(m_bye, m_vers); 
-  strcat(m_bye, "BYE "); 
-  strcat(m_bye, m_cookie);
-  strcat(m_bye, "\n");
-  //printf("Bye message: %s/n", m_bye);
+  // Parse m_rcv into Packet object
+  p_rcv.parse(*m_rcv);
 
-  // Send BYE message
-  if(send(m_soc, m_bye, strlen(m_bye), 0) != (unsigned int)strlen(m_bye))
-    DieWithError((char*)"send() bye sent a different number of bytes than expected");
+
+//// Creates BYE message
+//m_type = strtok(m_rcv, " ");
+//char * m_cookie = strtok(NULL, " ");
+//strcpy(m_bye, m_vers); 
+//strcat(m_bye, "BYE "); 
+//strcat(m_bye, m_cookie);
+//strcat(m_bye, "\n");
+////printf("Bye message: %s/n", m_bye);
 
 
   /// Close connection
