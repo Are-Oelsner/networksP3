@@ -10,17 +10,19 @@
 int main (int argc, char *argv[]) {
 
   // Argument parsing variables
-  char *firstName;
-  char *lastName;
   char *serverHost = (char *)SERVER_HOST;
   unsigned short serverPort = atoi(SERVER_PORT);
-  char *servPortString;
+
+  int timeout;
+  int maxRetries;
+  char *hostname;
+  
 
   char c;
   int i;
 
-  if ((argc < 5) || (argc > 7)) {
-    printf("Error: Usage Project0Client [-s <server IP>[:<port>]] -f <firstName> -l <lastName>\n");
+  if ((argc < 7) || (argc > 11)) {
+    printf("Error: Usage ./Project3Client [-h <serverIP>] [-p <port>] -t <timeout> -i <max-retries> -d <hostname>\n");
     exit(1);
   }
 
@@ -32,17 +34,20 @@ int main (int argc, char *argv[]) {
        * argument to get the value of 
        * the option */
       switch (c) {
-        case 'f':                 // First name case
-          firstName = argv[i+1];
+        case 't':                 // Timeout case in seconds
+          timeout = atoi(argv[i+1]);
           break;
-        case 'l':                 // Last name case
-          lastName = argv[i+1];
+        case 'i':                 // Max-retries case
+          maxRetries = atoi(argv[i+1]);
           break;
-        case 's':                 // Host and Port case
-          serverHost = strtok(argv[i+1],":");
-          if ((servPortString = strtok(NULL, ":")) != NULL) {
-            serverPort = atoi(servPortString);
-          }
+        case 'd':                 // Hostname case
+          hostname = argv[i+1];
+          break;
+        case 'h':                 // Host case
+          serverHost = argv[i+1];
+          break;
+        case 'p':                 // Port Case
+            serverPort = atoi(argv[i+1]);
           break;
         default:
           break;
@@ -62,11 +67,12 @@ int main (int argc, char *argv[]) {
   /// Variables
   int m_soc;                        // Socket id
 
-  struct sockaddr_in srcAddr;       // sockaddr_in received
   struct sockaddr_in destAddr;      // sockaddr_in sent
+  struct sockaddr_in srcAddr;       // sockaddr_in received
 
   Packet p_query;                     // Outgoing Packet
-  char m_query[BUFFSIZE];             // Outgoing message
+  //char m_query[BUFFSIZE];             // Outgoing message
+  char* m_query;             // Outgoing message
 
   Packet p_rcv;                     // Incoming Packet
   char m_rcv[BUFFSIZE];             // Incoming ACK message buffer
@@ -77,7 +83,7 @@ int main (int argc, char *argv[]) {
 
 
 
-  /// Create a TCP socket
+  /// Create a UDP socket
   if((m_soc = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
     DieWithError((char*)"socket() failed");
 
@@ -103,29 +109,41 @@ int main (int argc, char *argv[]) {
 
   /// Communication with server
   // Creates Query message
-  char * m_vers = (char*)"CS332 ";
-  char * m_type = (char*)"HELLO ";
-  strcpy(m_query, m_vers);            // Sets version field
-  strcat(m_query, m_type);            // Sets type field
-  strcat(m_query, firstName);         // Sets first name field
-  strcat(m_query, " ");
-  strcat(m_query, lastName);          // Sets last name field
-  strcat(m_query, "\n");
-  //printf("Query message: %s/n", m_query);
+  p_query.setVersion("0110");
+  p_query.setType((char*)"000");
+  p_query.setX((char*)"0");
+  p_query.setQueryID((char*)"8675309188843228");
+  p_query.setData(hostname); 
+  p_query.computeChecksum();
+
+  m_query = p_query.constructMSG();
+
+
+
+  //printf("Query message: %s, %u\n", m_query, strlen(m_query));
+  printf("Query message: %s\t Length:  %u\n", m_query, strlen(m_query));
 
 
   // Send message
-  if(sendto(m_soc, m_query, strlen(m_query), 0, (struct sockaddr *)&destAddr, sizeof(destAddr)) != (unsigned int)strlen(m_query))
-    DieWithError((char*)"sendto() sent a different number of bytes than expected");
+  int m_bytesSent = 0;
+  int m_totalBytesSent = 0;
+  while(m_bytesSent != strlen(m_query)) {
+    if((m_bytesSent = sendto(m_soc, m_query, (unsigned int)strlen(m_query), 0, (struct sockaddr *)&destAddr, sizeof(destAddr))) <= 0)
+      DieWithError((char*)"sendto() sent a different number of bytes than expected");
+    m_totalBytesSent += m_bytesSent;
+  }
+  printf("Sent %u bits\n", m_totalBytesSent);
 
   //change to while((m_bytesReceived = recv(m_soc, m_rcv, BUFFSIZE-1, 0)) <= 0)
   // Receive Message
   fromSize = sizeof(srcAddr);
   m_totalBytesReceived = 0;
-  printf("ServerMessage: ");
+  printf("ServerMessage: \t");
   while(strchr(m_rcv, '\n') == NULL) {
+    printf("Receiving Message\n");
     if((m_bytesReceived = recvfrom(m_soc, m_rcv, BUFFSIZE-1, 0, (struct sockaddr *)&srcAddr, &fromSize)) <= 0)
       DieWithError((char*)"recv() failed or connection closed prematurely");
+    printf("Receiving Message - After If\n");
     m_totalBytesReceived += m_bytesReceived;
     m_rcv[m_bytesReceived] = '\0'; 
     printf("%s", m_rcv);

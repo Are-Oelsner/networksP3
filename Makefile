@@ -1,12 +1,12 @@
 default:
-	gcc -Wall Project3Client.cpp -std=c++11 -o ProjectClient
-	gcc -Wall Project3Server.cpp -std=c++11 -o ProjectServer
+	g++ -Wall Project3Client.cpp -std=c++11 -o ProjectClient
+	g++ -Wall Project3Server.cpp -std=c++11 -o ProjectServer
 
 client:
-	./Project3Client -f Are -l Oelsner
+	./ProjectClient -h 141.166.207.147 -p 31201 -t 10 -i 3 -d mathcs04
 
 client41:
-	./Project3Client -h mathcs04 -p 31201 -t 10 -i 3 -d mathcs02
+	./Project3Client -h 141.166.207.147 -p 31201 -t 10 -i 3 -d mathcs04
 
 #	./Project3Client -f Are -l Oelsner -s :141.166.207.147:31201
 
@@ -33,7 +33,7 @@ echo:
 	#StdoutEchoServer <port> #replace <>
 
 o:
-	vim -p Project3Server.cpp Project3Client.cpp
+	vim -p Project3Server.cpp Project3Client.cpp Packet.cpp
 
 gdb:
 	gdb Project3Client 
