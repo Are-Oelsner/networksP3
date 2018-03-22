@@ -2,13 +2,13 @@
 
 Packet::
 Packet() {
-  version = "0110";
-  type = "000";
-  X = "0";
-  length = "1";
-  queryID = "8675309188843228";
-  checksum ="1111111111111111";//TODO
-  q_data = "mathcs04";
+  version = (char*)"0110";
+  type = (char*)"000";
+  X = (char*)"0";
+  length = (char*)"1";
+  queryID = (char*)"8675309188843228";
+  checksum =(char*)"1111111111111111";//TODO
+  q_data = (char*)"mathcs04";
 }
 
 Packet::
@@ -58,17 +58,18 @@ parse(char* msg) {
   checksum = (char*) malloc (16);
 
   int offset = 0;
-  strncpy(version,  msg[offset],        4);
-  strncpy(type,     msg[offset += 4],   3);
-  strncpy(X,        msg[offset += 3],   1);
-  strncpy(length,   msg[offset += 1],   8);
-  strncpy(queryID,  msg[offset += 16],  16);
-  strncpy(checksum, msg[offset += 16],  16);
-  int Length = itoa(length);
+  strncpy(version,  (const char*)&msg[offset],        4);
+  strncpy(type,     (const char*)&msg[offset += 4],   3);
+  strncpy(X,        (const char*)&msg[offset += 3],   1);
+  strncpy(length,   (const char*)&msg[offset += 1],   8);
+  strncpy(queryID,  (const char*)&msg[offset += 16],  16);
+  strncpy(checksum, (const char*)&msg[offset += 16],  16);
+  //int Length[9];
+  //sprintf(Length, "%d", length);
+
+  int Length = atoi(length);
   for(int i = 0; i < Length; i++) {
-    
-
-
+  }
 }
 
 void

@@ -8,10 +8,9 @@
 #define MAXPENDING 5 //Maximum outstanding connection requests
 
 /* function declarations */
-// TCP Client handling function
-void HandleTCPClient(int clntSocket); 
+// UDP Client handling function
+void HandleUDPClient(int clntSocket); 
 
-char *cookie; //TODO rework this
 
 int main (int argc, char *argv[]) {
 
@@ -22,6 +21,7 @@ int main (int argc, char *argv[]) {
   struct sockaddr_in clntAddr; // Client Address
   unsigned short serverPort = atoi(SERVER_PORT);     // Server port
   unsigned int clntLen;            // Length of client address data structure
+  char* fileName;              // Database File name
 
   if (argc != 5) {
     printf("Error: Usage Project1Server -s <cookie> -p <port>\n");
@@ -40,8 +40,8 @@ int main (int argc, char *argv[]) {
        * argument to get the value of 
        * the option */
       switch (c) {
-        case 's':
-          cookie = argv[i+1];
+        case 'd':
+          fileName = argv[i+1];
           break;
         case 'p':
           serverPort =atoi(argv[i+1]);
@@ -54,8 +54,8 @@ int main (int argc, char *argv[]) {
 
   /* Networking code starts here */
 
-  /// Create a TCP socket
-  if((servSock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
+  /// Create a UDP socket
+  if((servSock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
     DieWithError((char*)"socket() failed");
 
 
@@ -84,14 +84,14 @@ int main (int argc, char *argv[]) {
 
     printf("Handling client %s\n", inet_ntoa(clntAddr.sin_addr));
 
-    HandleTCPClient(clntSock);
+    HandleUDPClient(clntSock);
   }
   exit(0);
   printf("Exited\n");
 }
 
 
-void HandleTCPClient(int clntSocket) {
+void HandleUDPClient(int clntSocket) {
 
   /// Variables
   char m_rcv[BUFFSIZE];             // Incoming HELLO message buffer
@@ -119,19 +119,12 @@ void HandleTCPClient(int clntSocket) {
   printf("\n");
 
   // Parse Received HELLO message
-  char * m_vers = (char*)"CS332 "; //TODO
-  char * m_type = strtok(m_rcv, " ");
-  char * firstname = strtok(NULL, " ");
-  char * lastname = strtok(NULL, " ");
+  // Parse message into Packet TODO
 
-  // Construct ACK message
-  strcpy(m_msg, m_vers); 
-  strcat(m_msg, "ACK "); 
-  strcat(m_msg, cookie);
-  strcat(m_msg, "\n");
+  // Construct Response
 
 
-  // Send ACK message
+  // Send Response message TODO
   if(send(clntSocket, m_msg, strlen(m_msg), 0) != (unsigned int)strlen(m_msg))
     DieWithError((char*)"send() sent a different number of bytes than expected");
 
@@ -150,10 +143,6 @@ void HandleTCPClient(int clntSocket) {
 
 
   // Parse Received BYE message
-  m_vers = (char*)"CS332 "; //TODO
-  m_type = strtok(m_bye, " ");
-  char * m_cookie = strtok(NULL, " ");
-
 
   /// Close connection
   close(clntSocket);

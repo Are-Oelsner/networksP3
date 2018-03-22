@@ -109,7 +109,7 @@ int main (int argc, char *argv[]) {
 
   /// Communication with server
   // Creates Query message
-  p_query.setVersion("0110");
+  p_query.setVersion((char*)"0110");
   p_query.setType((char*)"000");
   p_query.setX((char*)"0");
   p_query.setQueryID((char*)"8675309188843228");
@@ -121,13 +121,13 @@ int main (int argc, char *argv[]) {
 
 
   //printf("Query message: %s, %u\n", m_query, strlen(m_query));
-  printf("Query message: %s\t Length:  %u\n", m_query, strlen(m_query));
+  printf("Query message: %s\t Length:  %lu\n", m_query, strlen(m_query));
 
 
   // Send message
   int m_bytesSent = 0;
   int m_totalBytesSent = 0;
-  while(m_bytesSent != strlen(m_query)) {
+  while(m_bytesSent != (int)strlen(m_query)) {
     if((m_bytesSent = sendto(m_soc, m_query, (unsigned int)strlen(m_query), 0, (struct sockaddr *)&destAddr, sizeof(destAddr))) <= 0)
       DieWithError((char*)"sendto() sent a different number of bytes than expected");
     m_totalBytesSent += m_bytesSent;
@@ -154,7 +154,7 @@ int main (int argc, char *argv[]) {
   }
 
   // Parse m_rcv into Packet object
-  p_rcv.parse(*m_rcv);
+  p_rcv.parse(m_rcv);
 
 
 //// Creates BYE message

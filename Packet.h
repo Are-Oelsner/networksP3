@@ -36,7 +36,7 @@ class Packet {
     
     // Constructs Message from Packet Data
     char* constructMSG();        // Constructs char message from packet variables TODO char*?
-    void parse(const char msg);       // Parses message into Packet
+    void parse(char* msg);       // Parses message into Packet
 
     ///Setters
     void setVersion(char* c)  {version = c;}
