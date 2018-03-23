@@ -74,10 +74,6 @@ int main (int argc, char *argv[]) {
   Packet p_rcv;                     // Incoming Packet
 
   unsigned int fromSize;            // Size of received packet
-  int m_bytesReceived;              // Bytes received
-  int m_totalBytesReceived;         // Tota bytes received
-
-
 
   /// Create a UDP socket
   if((m_soc = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
@@ -127,21 +123,15 @@ int main (int argc, char *argv[]) {
       printf("Sent %u bits of %lu\n", m_totalBytesSent, sizeof(p_query));
   }
 
-  // Receive Message
-  fromSize = sizeof(srcAddr);
-  m_totalBytesReceived = 0;
-  if(debug)
-    printf("Receiving Message\n");
-  while(m_bytesReceived < (int)sizeof(Packet)) {
-    if((m_bytesReceived = recvfrom(m_soc, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&srcAddr, &fromSize)) <= 0)
+  while(p_rcv.queryID != p_query.queryID) { //TODO add timeout
+    // Receive Message
+    fromSize = sizeof(srcAddr);
+    if(recvfrom(m_soc, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&srcAddr, &fromSize) <= 0)
       DieWithError((char*)"recv() failed or connection closed prematurely");
-    m_totalBytesReceived += m_bytesReceived;
-    if(debug)
-      printf("Received %u bits of %lu\n", m_totalBytesReceived, sizeof(Packet));
   }
 
   if(debug) {
-    printf("Packet Received:\n");
+    printf("Response Received:\n");
     printPacket(&p_rcv);
   }
   printData(&p_rcv);
