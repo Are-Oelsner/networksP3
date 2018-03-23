@@ -50,3 +50,6 @@ gs:
 
 clean:
 	rm Project3Client
+
+git:
+	git add Project3*.cpp Packet.cpp Makefile
