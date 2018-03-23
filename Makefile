@@ -46,7 +46,7 @@ gc:
 	gdb ./ProjectClient 
 
 gs:
-	gdb ./Project3Client 
+	gdb ./ProjectServer 
 
 clean:
 	rm Project3Client
