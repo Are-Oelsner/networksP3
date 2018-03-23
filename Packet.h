@@ -65,8 +65,8 @@ class Packet {
     char* printData();
 
     ///Helper Functions
-    //https://stackoverflow.com/questions/3784263/converting-an-int-into-a-4-byte-char-array-c
-    char* toBinary(unsigned long c);
+    //www.cplusplus.com/forum/beginner/187933/
+    char* toBinary(int c);
 };
 
 #endif

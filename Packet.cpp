@@ -104,7 +104,7 @@ void
 Packet::
 setData(char** data, int numEntries) {
   char* name;
-  unsigned long time;
+  int time;
   for(int i = 0; i < numEntries; i++) {
     name = strtok(data[i], ":");
     time = atoi(strtok(NULL, ":"));
@@ -147,24 +147,34 @@ printData() {
 
 char*
 Packet::
-toBinary(unsigned long c) {
-  char* binary = (char*)""; // unsigned chars for both of these?
-  unsigned char byte[4];
-  byte[0] = (c >> 24) & 0xFF;
-  byte[1] = (c >> 16) & 0xFF;
-  byte[2] = (c >> 8) & 0xFF;
-  byte[3] = c & 0xFF;
-  char* b0 = (char*)&byte[0];
-  char* b1 = (char*)&byte[1];
-  char* b2 = (char*)&byte[2];
-  char* b3 = (char*)&byte[3];
-  strcpy(binary, b0);
-  strcat(binary, b1);
-  strcat(binary, b2);
-  strcat(binary, b3);
-  printf("Binary: %s\n", binary);
+toBinary(int c) {
+  char* binary = (char*)"";
+  unsigned int mask = 1 << (sizeof(int) * 8 - 1);
+  for(int i = 0; i < (int)sizeof(int)*8; i++) {
+    if((c & mask) == 0)
+      binary[i] = '0';
+    else 
+      binary[i] = '1';
+    mask >>= 1;
+  }
   return binary;
 }
+//  char* binary = (char*)""; // unsigned chars for both of these?
+//unsigned char byte[4];
+//byte[0] = (c >> 24) & 0xFF;
+//byte[1] = (c >> 16) & 0xFF;
+//byte[2] = (c >> 8) & 0xFF;
+//byte[3] = c & 0xFF;
+//char* b0 = (char*)&byte[0];
+//char* b1 = (char*)&byte[1];
+//char* b2 = (char*)&byte[2];
+//char* b3 = (char*)&byte[3];
+//strcpy(binary, b0);
+//strcat(binary, b1);
+//strcat(binary, b2);
+//strcat(binary, b3);
+//printf("Binary: %s\n", binary);
+//return binary;
 
 
 
