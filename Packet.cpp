@@ -26,6 +26,7 @@ struct Packet {
 
 void
 genQueryID(struct Packet *p) {
+  srand(time(NULL));
   p->queryID = (unsigned short) rand() % 2147483648;
 }
 
@@ -131,7 +132,7 @@ printData(const struct Packet *p) {
 
 void
 printPacket(const struct Packet *p) {
-  printf("\nv\tt\tX\tlength\tqueryID\tchecksum\n");
+  printf("vers\ttype\tX\tlength\tqueryID\tchecksum\n");
   printf("%u\t%u\t%u\t%u\t%u\t%u\n", p->version, p->type, p->X, p->length, p->queryID, p->checksum);
   printData(p);
 }

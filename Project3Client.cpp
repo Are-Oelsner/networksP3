@@ -129,7 +129,7 @@ int main (int argc, char *argv[]) {
     // Receive Message
     if(recvfrom(m_soc, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&srcAddr, &fromSize) <= 0)
       DieWithError((char*)"recv() failed or connection closed prematurely");
-    printPacket(&p_rcv);
+      printPacket(&p_rcv);
   }
 
   if(debug)
