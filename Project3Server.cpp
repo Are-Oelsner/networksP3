@@ -12,6 +12,7 @@
 bool debug = false; // determines information output
 
 /* function declarations */
+
 int main (int argc, char *argv[]) {
 
   // Server variables

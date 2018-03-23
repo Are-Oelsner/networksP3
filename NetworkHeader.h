@@ -6,8 +6,11 @@
 #include <unistd.h>     /* for close() */
 #include <netdb.h>
 #include <cctype>
+#include <errno.h>
+#include <signal.h>
 
 #include "DieWithError.c"
+//#include "CatchAlarm.c"
 
 //#define SERVER_HOST "141.166.207.144"  /* wallis IP address //MathCS01 */
 //#define SERVER_HOST "141.166.207.143"  /* wallis IP address //MathCS02 */

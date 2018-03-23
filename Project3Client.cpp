@@ -7,11 +7,12 @@
 
 bool debug = false;
 
-/* function declarations */
+void CatchAlarm(int ignored);          /*Handler for SIGALRM     */
+
+int tries = 0;
 
 int main (int argc, char *argv[]) {
 
-  // Argument parsing variables
   char *serverHost = (char *)SERVER_HOST;
   unsigned short serverPort = atoi(SERVER_PORT);
 
@@ -19,7 +20,7 @@ int main (int argc, char *argv[]) {
   int maxRetries;
   char *hostname;
 
-
+  // Argument parsing variables
   char c;
   int i;
 
@@ -58,26 +59,32 @@ int main (int argc, char *argv[]) {
   }
 
 
+  /* Networking code starts here */
+  /// Variables
   hostent* remoteHost;              // Constructs hostent
   char* hostName = serverHost;      // Rename 
   unsigned int addr;
-
-  /* Networking code starts here */
-  /// Variables
   int m_soc;                        // Socket id
-
   struct sockaddr_in destAddr;      // sockaddr_in sent
   struct sockaddr_in srcAddr;       // sockaddr_in received
-
-  Packet p_query;                     // Outgoing Packet
-
+  Packet p_query;                   // Outgoing Packet
   Packet p_rcv;                     // Incoming Packet
-
   unsigned int fromSize;            // Size of received packet
+  struct sigaction myAction;        // For setting signal handler
 
   /// Create a UDP socket
   if((m_soc = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
     DieWithError((char*)"socket() failed");
+
+  // Set signal handler for alarm signal
+  myAction.sa_handler = CatchAlarm;
+
+  if(sigfillset(&myAction.sa_mask) < 0) // block everything in handler
+    DieWithError((char*)"sigfillset() failed");
+  myAction.sa_flags = 0;
+
+  if(sigaction(SIGALRM, &myAction, 0) < 0)
+    DieWithError((char*)"sigaction() failed for SIGALRM");
 
 
   /// Construct Server Address Structure
@@ -114,6 +121,8 @@ int main (int argc, char *argv[]) {
     printPacket(&p_query);
   }
 
+retransmit: // Goto label for retransmit after timeout
+
   // Send message
   int m_bytesSent = 0;
   int m_totalBytesSent = 0;
@@ -125,17 +134,31 @@ int main (int argc, char *argv[]) {
       printf("Sent %u bits of %lu\n", m_totalBytesSent, sizeof(p_query));
   }
 
+  // Receive Message
   fromSize = sizeof(srcAddr);
-  while(p_rcv.queryID != p_query.queryID || p_rcv.version != p_query.version || p_rcv.type != 4 || srcAddr.sin_addr.s_addr != destAddr.sin_addr.s_addr || Checksum((void*)&p_rcv, sizeof(p_rcv)) != 0) { //TODO add timeout
-    // Receive Message
-    if(recvfrom(m_soc, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&srcAddr, &fromSize) <= 0)
-      DieWithError((char*)"recv() failed or connection closed prematurely");
-    if(debug)
-      printPacket(&p_rcv);
-  }
+  alarm(timeout);
+  while(recvfrom(m_soc, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&srcAddr, &fromSize) < 0 
+      || p_rcv.queryID != p_query.queryID || p_rcv.version != p_query.version || p_rcv.type != 4 
+      || srcAddr.sin_addr.s_addr != destAddr.sin_addr.s_addr || Checksum((void*)&p_rcv, sizeof(p_rcv)) != 0)
+    if(errno == EINTR) { // Alarm went off 
+      if(tries < maxRetries) {
+        printf("timed out, %d more tries...\n", maxRetries-tries);
+        if(sendto(m_soc, &p_query, sizeof(Packet), 0, (struct sockaddr *)&destAddr, sizeof(destAddr)) != sizeof(Packet))
+          DieWithError((char*)"sendto() sent a different number of bytes than expected");
+        alarm(timeout);
+      }else
+        DieWithError((char*)"No Response");
+    }else
+      DieWithError((char*)"recvfrom() failed");
+  // If recvfrom() got something cancel timeout
+  alarm(0);
 
   if(debug)
     printf("Response Received:\n");
+
+  if(debug)
+    printPacket(&p_rcv);
+
 
   if(p_rcv.length > 0)
     printData(&p_rcv);
@@ -149,5 +172,8 @@ int main (int argc, char *argv[]) {
   printf("Exited\n");
 }
 
+void CatchAlarm(int ignored) {
+  tries += 1;
+}
 
 

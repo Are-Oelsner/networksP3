@@ -4,7 +4,7 @@ default:
 	g++ -Wall -fpermissive Project3Server.cpp -std=c++11 -o ProjectServer
 
 client:
-	./ProjectClient -h 141.166.207.147 -p 31201 -t 10 -i 3 -d mathcs04
+	./Project3Client -h 141.166.207.144 -p 31201 -t 3 -i 3 -d mathcs04
 
 client41:
 	./Project3Client -h 141.166.207.147 -p 31201 -t 10 -i 3 -d mathcs04
