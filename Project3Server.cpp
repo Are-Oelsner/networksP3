@@ -86,7 +86,7 @@ int main (int argc, char *argv[]) {
     printPacket(&p_rcv);
 
     // Check database and return relevant data
-    char* hostname = (char*)"";
+    char hostname[100];
     strcpy(hostname, p_rcv.data);
 
     char** data;
