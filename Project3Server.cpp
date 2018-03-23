@@ -79,8 +79,10 @@ int main (int argc, char *argv[]) {
 
     //TODO while loop checking for version/type etc
     // Block until receive message from a client
-    if(recvfrom(sock, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, &clntLen) < 0)
-      DieWithError((char*)"recvfrom() failed");
+    while(p_rcv.version != 0x6 || p_rcv.type != 0/* || checksum(&p_rcv) != 0*/) { //TODO add timeout
+      if(recvfrom(sock, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, &clntLen) < 0)
+        DieWithError((char*)"recvfrom() failed");
+    }
     printf("////////////////////////////////////////////////////\n");
     printf("Handling client %s\n", inet_ntoa(clntAddr.sin_addr));
 
@@ -108,7 +110,7 @@ int main (int argc, char *argv[]) {
     if(data != nullPtr)
       setData(&p_rsp, data, numEntries); 
     p_rsp.checksum = 0x0000;
-    p_rsp.checksum = checksum(&p_rsp);
+    //p_rsp.checksum = checksum(&p_rsp);
 
     printPacket(&p_rsp);
 
