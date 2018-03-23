@@ -92,8 +92,8 @@ int main (int argc, char *argv[]) {
     //if((recvMsgSize = recvfrom(sock, rcvBuffer, BUFFSIZE, 0, (struct sockaddr *)&clntAddr, &cliAddrLen)) < 0)
     if((recvMsgSize = recvfrom(sock, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, &cliAddrLen)) < 0)
       DieWithError((char*)"recvfrom() failed");
-    if(clntAddr.sin_addr.s_addr != servAddr.sin_addr.s_addr) //TODO do I need this?
-      DieWithError((char*)"Error: received a packet from unknown source.\n");
+  //if(clntAddr.sin_addr.s_addr != servAddr.sin_addr.s_addr) //TODO do I need this?
+  //  DieWithError((char*)"Error: received a packet from unknown source.\n");
     //totalBytesReceived += rcvMsgSize;
     //rcvBuffer[totalBytesReceived] = '\0'; 
     printf("Handling client %s\n", inet_ntoa(clntAddr.sin_addr));
