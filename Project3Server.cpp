@@ -94,6 +94,8 @@ int main (int argc, char *argv[]) {
     data = lookup_user_names(hostname, &numEntries);
     if(data == nullPtr)  // invalid hostname - X defaults to 1
       p_rsp.X = 0x0;   
+    else
+      p_rsp.X = 0x1;   
 
     // Construct Response
     p_rsp.version  = 0x6;

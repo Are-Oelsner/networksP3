@@ -64,9 +64,9 @@ setData(struct Packet *p, char** data, int numEntries) {
 
 void
 printPacket(const struct Packet *p) {
-  printf("\n| v| t|X length|      queryID  |\n");
-  printf("%u%u%u%u%u\n", p->version, p->type, p->X, p->length, p->queryID);
-  printf("     checksum  |   Data \n");
-  printf("%u%s\n", p->checksum, p->data);
+  printf("\nv\tt\tX\tlength\tqueryID\n");
+  printf("%u\t%u\t%u\t%u\t%u\n", p->version, p->type, p->X, p->length, p->queryID);
+  printf("checksum\tData \n");
+  printf("%u\t%s\n", p->checksum, p->data);
 }
 

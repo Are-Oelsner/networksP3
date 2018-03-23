@@ -111,12 +111,12 @@ int main (int argc, char *argv[]) {
   p_query.checksum = 0x0024;
   strcpy(p_query.data, hostname);
 
+  printf("Sending Query\nPacket:\n");
   printPacket(&p_query);
 
   // Send message
   int m_bytesSent = 0;
   int m_totalBytesSent = 0;
-  cout << sizeof(p_query) << " " << sizeof(Packet) << endl; //TODO remove
   while(m_bytesSent != (int)sizeof(p_query)) {
     if((m_bytesSent = sendto(m_soc, &p_query, sizeof(Packet), 0, (struct sockaddr *)&destAddr, sizeof(destAddr))) <= 0)
       DieWithError((char*)"sendto() sent a different number of bytes than expected");
@@ -127,16 +127,15 @@ int main (int argc, char *argv[]) {
   // Receive Message
   fromSize = sizeof(srcAddr);
   m_totalBytesReceived = 0;
-  printf("ServerMessage: \t");
+  printf("Receiving Message\n");
   while(m_bytesReceived < (int)sizeof(Packet)) {
-    printf("Receiving Message\n");
     if((m_bytesReceived = recvfrom(m_soc, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&srcAddr, &fromSize)) <= 0)
       DieWithError((char*)"recv() failed or connection closed prematurely");
-    printf("Receiving Message - After If\n");
     m_totalBytesReceived += m_bytesReceived;
     printf("Received %u bits of %lu\n", m_totalBytesReceived, sizeof(Packet));
   }
 
+  printf("Packet Received:\n");
   printPacket(&p_rcv);
 
   /// Close connection
