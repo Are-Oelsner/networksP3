@@ -1,6 +1,7 @@
 default:
-	g++ -Wall Project3Client.cpp -std=c++11 -o ProjectClient
-	g++ -Wall Project3Server.cpp -std=c++11 -o ProjectServer
+	g++ -Wall Project3Client.cpp Packet.cpp -std=c++11 -o ProjectClient
+	echo ///////////////////////////////////////////////////////////////////
+	g++ -Wall Project3Server.cpp Packet.cpp -std=c++11 -o ProjectServer
 
 client:
 	./ProjectClient -h 141.166.207.147 -p 31201 -t 10 -i 3 -d mathcs04

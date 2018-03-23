@@ -3,7 +3,7 @@
  */
 
 #include "NetworkHeader.h"
-#include "Packet.cpp"
+#include "Packet.h"
 
 /* function declarations */
 
@@ -60,9 +60,6 @@ int main (int argc, char *argv[]) {
   char* hostName = serverHost;      // Rename 
   unsigned int addr;
 
-
-  printf("Host: %s\tPort: %u\n", serverHost, serverPort);
-
   /* Networking code starts here */
   /// Variables
   int m_soc;                        // Socket id
@@ -97,13 +94,13 @@ int main (int argc, char *argv[]) {
   // www.cplusplus.com/forum/general/92837/
   if((remoteHost = gethostbyname(hostName)) != NULL) {  // If host is domain name
     destAddr.sin_addr.s_addr =  *((unsigned long *) remoteHost->h_addr_list[0]);
-    printf("Name: %u\n", *remoteHost->h_addr_list[0]);
+    //printf("Name: %u\n", *remoteHost->h_addr_list[0]);
   }
   else { // Host address is address
     addr = inet_addr(hostName);   // converts format of address to binary
     remoteHost = gethostbyaddr((char *)&addr, 4, AF_INET);
     destAddr.sin_addr.s_addr = addr;  // Internet Address 32 bits
-    printf("Address: %s, \t addr: %u\n", hostName, addr);
+    //printf("Address: %s, \t addr: %u\n", hostName, addr);
   }
 
 
@@ -115,6 +112,8 @@ int main (int argc, char *argv[]) {
   p_query.setQueryID((char*)"8675309188843228");
   p_query.setData(hostname); 
   p_query.computeChecksum();
+
+  p_query.printPacket();
 
   m_query = p_query.constructMSG();
 
@@ -131,8 +130,8 @@ int main (int argc, char *argv[]) {
     if((m_bytesSent = sendto(m_soc, m_query, (unsigned int)strlen(m_query), 0, (struct sockaddr *)&destAddr, sizeof(destAddr))) <= 0)
       DieWithError((char*)"sendto() sent a different number of bytes than expected");
     m_totalBytesSent += m_bytesSent;
+    printf("Sent %u bits of %lu\n", m_totalBytesSent, strlen(m_query));
   }
-  printf("Sent %u bits\n", m_totalBytesSent);
 
   //change to while((m_bytesReceived = recv(m_soc, m_rcv, BUFFSIZE-1, 0)) <= 0)
   // Receive Message

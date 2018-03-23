@@ -64,7 +64,7 @@ char **lookup_user_names (char *host_name, int *no_of_entries) {
     return nullPtr;
   } else if (!foundAMatch) {
     // Make userList nonNull ptr
-    userList[0] = "1";
+    userList[0] = (char*)"1";
   }
   return userList;
 }

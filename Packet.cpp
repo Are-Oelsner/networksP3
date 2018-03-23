@@ -5,7 +5,7 @@ Packet() {
   version = (char*)"0110";
   type = (char*)"000";
   X = (char*)"0";
-  length = (char*)"1";
+  length = (char*)"00000001";
   queryID = (char*)"8675309188843228";
   checksum =(char*)"1111111111111111";//TODO
   q_data = (char*)"mathcs04";
@@ -18,7 +18,7 @@ Packet::
 char*
 Packet::
 constructMSG() {
-  char msg[1000];
+  char msg[8192];
   strcpy(msg, version);            // Sets version field
   strcat(msg, type);            // Sets type field
   strcat(msg, X);         // Sets first name field
@@ -31,16 +31,21 @@ constructMSG() {
     for(unsigned int i = 0; i < r_data.size(); i++) {
       int size = strlen(r_data[i].first);
       if(size > 8) {
-        printf("Error: username size, %u, too big", size);
+        printf("Error: username %s of size, %u, too big", r_data[i].first, size);
         return NULL;
       }
       strcat(msg, r_data[i].first);
-      while(size < 8) {
-        msg[size] = '\0';
+      while(size < 8) { // Makes sure each username takes 8 bits
+        strcat(msg, (char*)"*"); // Character to be replaced by null character
         size++;
       }
-      strcat(msg, to_string(r_data[i].second).c_str());
+      strcat(msg, r_data[i].second);
     }
+  }
+  char* tmp = strchr(msg, '*'); // Replaces all tmp *'s with null characters
+  while(tmp != NULL) {
+    tmp[0] = '\0';
+    tmp = strchr(tmp, '*');
   }
   msg1 = (char*) malloc (strlen(msg));
   msg1 = msg;
@@ -69,6 +74,7 @@ parse(char* msg) {
 
   int Length = atoi(length);
   for(int i = 0; i < Length; i++) {
+
   }
 }
 
@@ -91,11 +97,74 @@ void
 Packet::
 setData(char* hostname) {
   q_data = hostname;
+  length = (char*)"00000001";
 }
 
 void
 Packet::
-setData(vector<pair<char*, unsigned int>> list) {
+setData(char** data, int numEntries) {
+  char* name;
+  unsigned long time;
+  for(int i = 0; i < numEntries; i++) {
+    name = strtok(data[i], ":");
+    time = atoi(strtok(NULL, ":"));
+    pair<char*, char*> tmp = make_pair(name, toBinary(time));
+    r_data.emplace_back(tmp);
+  }
 }
+
+void
+Packet::
+printPacket() {
+  printf("%s%s%s%s%s\n%s%s\n", version, type, X, length, queryID, checksum, printData());
+}
+
+char*
+Packet::
+printData() {
+  if(strcmp(q_data, "") != 0)
+    return q_data;
+  else {
+    char* data = (char*)"";
+    int size = 0;
+    for(int i = 0; i < (int)r_data.size(); i++) {
+      strcat(data, r_data[i].first);
+      size = strlen(r_data[i].first);
+      while(size < 8) { // Makes sure each username takes 8 bits
+        strcat(data, (char*)"*"); // Character to be replaced by null character
+        size++;
+      }
+      strcat(data, r_data[i].second);
+    }
+    char* tmp = strchr(data, '*'); // Replaces all tmp *'s with null characters
+    while(tmp != NULL) {
+      tmp[0] = '0';
+      tmp = strchr(tmp, '*');
+    }
+    return data;
+  }
+}
+
+char*
+Packet::
+toBinary(unsigned long c) {
+  char* binary = (char*)""; // unsigned chars for both of these?
+  unsigned char byte[4];
+  byte[0] = (c >> 24) & 0xFF;
+  byte[1] = (c >> 16) & 0xFF;
+  byte[2] = (c >> 8) & 0xFF;
+  byte[3] = c & 0xFF;
+  char* b0 = (char*)&byte[0];
+  char* b1 = (char*)&byte[1];
+  char* b2 = (char*)&byte[2];
+  char* b3 = (char*)&byte[3];
+  strcpy(binary, b0);
+  strcat(binary, b1);
+  strcat(binary, b2);
+  strcat(binary, b3);
+  printf("Binary: %s\n", binary);
+  return binary;
+}
+
 
 

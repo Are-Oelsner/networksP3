@@ -4,30 +4,35 @@
  */
 
 #include "NetworkHeader.h"
+#include "Packet.h"
+#include "Database.cpp"
 
 #define MAXPENDING 5 //Maximum outstanding connection requests
 
 /* function declarations */
 // UDP Client handling function
-void HandleUDPClient(int clntSocket); 
+void HandleUDPClient(int sock, struct sockaddr_in clntAddr, unsigned int cliAddrLen, char* rcvBuffer); 
 
 
 int main (int argc, char *argv[]) {
 
-  // Argument parsing variables
-  int servSock;                    // Socket descriptor for server
-  int clntSock;                    // Socket descriptor for client
+  // Server variables
+  int sock;                    // Socket descriptor for server
   struct sockaddr_in servAddr; // Local Address
   struct sockaddr_in clntAddr; // Client Address
-  unsigned short serverPort = atoi(SERVER_PORT);     // Server port
-  unsigned int clntLen;            // Length of client address data structure
+  unsigned int cliAddrLen;     // Length of incoming message
+  unsigned int clntLen;        // Length of client address data structure
   char* fileName;              // Database File name
+  char rcvBuffer[BUFFSIZE];    // Buffer for received queries
+  int recvMsgSize;             // Size of received query
+  unsigned short serverPort = atoi(SERVER_PORT);   // Server port
 
   if (argc != 5) {
     printf("Error: Usage Project1Server -s <cookie> -p <port>\n");
     exit(1);
   }
 
+  // Argument Parsing Variables
   char c;
   int i;
 
@@ -53,9 +58,11 @@ int main (int argc, char *argv[]) {
   }
 
   /* Networking code starts here */
+  open_database(fileName);
+
 
   /// Create a UDP socket
-  if((servSock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+  if((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
     DieWithError((char*)"socket() failed");
 
 
@@ -67,87 +74,76 @@ int main (int argc, char *argv[]) {
 
 
   /// Bind to the local address
-  if(bind(servSock, (struct sockaddr *) &servAddr, sizeof(servAddr)) < 0)
+  if(bind(sock, (struct sockaddr *) &servAddr, sizeof(servAddr)) < 0)
     DieWithError((char*)"bind() failed");
 
-  /// Mark the socket so it listens for incoming connections
-  if(listen(servSock, MAXPENDING) < 0)
-    DieWithError((char*)"listen() failed");
 
+  //int rcvMsgSize;                   // Bytes received
+  //int totalBytesReceived;         // Tota bytes received 
 
-  for(;;) {//TODO while(true)
+  for(;;) {// while(true)
     clntLen = sizeof(clntAddr);       // Sets size of in-out parameter
 
-    // Wait for a client to connect
-    if((clntSock = accept(servSock, (struct sockaddr *) &clntAddr, &clntLen)) < 0)
-      DieWithError((char*)"accept() failed");
-
+    // Block until receive message from a client
+    //totalBytesReceived = 0;
+    //printf("ServerMessage: \t");
+    //while(strchr(rcvBuffer, '\n') == NULL) {
+    if((recvMsgSize = recvfrom(sock, rcvBuffer, BUFFSIZE, 0, (struct sockaddr *)&clntAddr, &cliAddrLen)) < 0)
+      DieWithError((char*)"recvfrom() failed");
+    if(clntAddr.sin_addr.s_addr != servAddr.sin_addr.s_addr) //TODO do I need this?
+      DieWithError((char*)"Error: received a packet from unknown source.\n");
+    //totalBytesReceived += rcvMsgSize;
+    //rcvBuffer[totalBytesReceived] = '\0'; 
     printf("Handling client %s\n", inet_ntoa(clntAddr.sin_addr));
+    printf("%s", rcvBuffer);
+    //}
+    HandleUDPClient(sock, clntAddr, cliAddrLen, rcvBuffer);
 
-    HandleUDPClient(clntSock);
+
   }
+  close(sock);
+  close_database();
   exit(0);
   printf("Exited\n");
 }
 
 
-void HandleUDPClient(int clntSocket) {
+void HandleUDPClient(int sock, struct sockaddr_in clntAddr, unsigned int cliAddrLen, char* rcvBuffer) {
 
   /// Variables
-  char m_rcv[BUFFSIZE];             // Incoming HELLO message buffer
-  char m_bye[BUFFSIZE];             // Incoming BYE message buffer
-  char m_msg[BUFFSIZE];             // Outgoing ACK message
-  int rcvMsgSize;                   // Bytes received
-  int m_totalBytesReceived;         // Tota bytes received TODO delete
+  Packet p_rcv;                     // Received Query Packet
+  Packet p_msg;                     // Response Packet
+  char* m_msg;             // Outgoing Response message
+  char** data;
+  int numEntries;
 
+  // Construct Packet from received Query
+  p_rcv.parse(rcvBuffer);   
+  p_rcv.printPacket();
 
-  //if((rcvMsgSize = recv(clntSocket, m_rcv, BUFFSIZE, 0)) < 0) //Buffsize -1? <= 0?
-  //  DieWithError((char*)"recv() failed or connection closed prematurely");
+  // Check database and return relevant data
+  data = lookup_user_names(p_rcv.getQData(), &numEntries);
+  if(data == nullPtr)  // invalid hostname - X defaults to 1
+    p_msg.setX((char*)"0");   
 
-  //while(rcvMsgSize > 0) {
-
-  /// Receives Hello Message from client
-  m_totalBytesReceived = 0;
-  printf("Client HELLO Message: ");
-  while(strchr(m_rcv, '\n') == NULL) {
-    if((rcvMsgSize = recv(clntSocket, m_rcv, BUFFSIZE-1, 0)) <= 0)
-      DieWithError((char*)"recv() failed or connection closed prematurely");
-    m_totalBytesReceived += rcvMsgSize;
-    m_rcv[rcvMsgSize] = '\0'; 
-    printf("%s", m_rcv);
-  }
-  printf("\n");
-
-  // Parse Received HELLO message
-  // Parse message into Packet TODO
 
   // Construct Response
+  p_msg.setVersion((char*)"0110");
+  p_msg.setType((char*)"100"); 
+  p_msg.setQueryID((char*)"8675309188843228"); // TODO convert to random gen
+  p_msg.setData(data, numEntries); 
+  //p_msg.computeChecksum();
 
+  m_msg = p_msg.constructMSG();
 
-  // Send Response message TODO
-  if(send(clntSocket, m_msg, strlen(m_msg), 0) != (unsigned int)strlen(m_msg))
-    DieWithError((char*)"send() sent a different number of bytes than expected");
-
-
-  /// Receives BYE Message from client
-  m_totalBytesReceived = 0;
-  printf("Client BYE Message: ");
-  while(strchr(m_bye, '\n') == NULL) {
-    if((rcvMsgSize = recv(clntSocket, m_bye, BUFFSIZE-1, 0)) <= 0)
-      DieWithError((char*)"recv() failed or connection closed prematurely");
-    m_totalBytesReceived += rcvMsgSize;
-    m_bye[rcvMsgSize] = '\0'; 
-    printf("%s", m_bye);
+  // Send Response message
+  int bytesSent = 0;
+  int totalBytesSent = 0;
+  while(totalBytesSent != (int)strlen(m_msg)) {
+    if((bytesSent = sendto(sock, m_msg, (unsigned int)strlen(m_msg), 0, (struct sockaddr *)&clntAddr, sizeof(clntAddr))) <= 0)
+      DieWithError((char*)"sendto() sent a different number of bytes than expected");
+    totalBytesSent += bytesSent;
+    printf("Sent %u bits of %lu\n", totalBytesSent, strlen(m_msg));
   }
-  printf("\n");
-
-
-  // Parse Received BYE message
-
-  /// Close connection
-  close(clntSocket);
-
 }
-
-
 

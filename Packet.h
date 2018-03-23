@@ -26,7 +26,7 @@ class Packet {
                                     //    uses to map responses to outstanding requests
       char* checksum;            // Checksum(16 bit) ones complement checksum of entire packet
       char* q_data;                  // Query data stores null terminated hostname string
-      vector<pair<char*, unsigned int>> r_data;    // Response Data- (8 char + 4 bytes)/pair
+      vector<pair<char*, char*>> r_data;    // Response Data- (8 char + 4 bytes)/pair
   public:
     ///Constructors
     // Default Constructor
@@ -42,14 +42,31 @@ class Packet {
     void setVersion(char* c)  {version = c;}
     void setType(char* c)     {type    = c;}
     void setX(char* c)        {X       = c;}
-    void setQueryID(char* c) {queryID = c;}
+    void setLength(char* c)   {length  = c;}
+    void setQueryID(char* c)  {queryID = c;}
+
+    ///Getters
+    char* getVersion()  {return version;}
+    char* getType()     {return type;}
+    char* getX()        {return X;}
+    char* getLength()   {return length;}
+    char* getQueryID()  {return queryID;}
+    char* getChecksum() {return checksum;}
+    char* getQData()    {return q_data;}
+    vector<pair<char*, char*>> getData() {return r_data;}
     
     ///Functions
     void genQueryID();
     int computeChecksum();
     int checkChecksum();
     void setData(char* hostname); // Ex. "mathcs02\0"
-    void setData(vector<pair<char*, unsigned int>> list);
+    void setData(char** data, int numEntries);
+    void printPacket();
+    char* printData();
+
+    ///Helper Functions
+    //https://stackoverflow.com/questions/3784263/converting-an-int-into-a-4-byte-char-array-c
+    char* toBinary(unsigned long c);
 };
 
 #endif
