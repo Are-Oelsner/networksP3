@@ -140,11 +140,11 @@ void HandleUDPClient(int sock, struct sockaddr_in clntAddr, unsigned int cliAddr
   // Send Response message
   int bytesSent = 0;
   int totalBytesSent = 0;
-  while(totalBytesSent != (int)strlen(m_msg)) {
-    if((bytesSent = sendto(sock, m_msg, (unsigned int)strlen(m_msg), 0, (struct sockaddr *)&clntAddr, sizeof(clntAddr))) <= 0)
+  while(totalBytesSent < sizeof(Packet)) {
+    if((bytesSent = sendto(sock, &p_msg, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, sizeof(clntAddr))) <= 0)
       DieWithError((char*)"sendto() sent a different number of bytes than expected");
     totalBytesSent += bytesSent;
-    printf("Sent %u bits of %lu\n", totalBytesSent, strlen(m_msg));
+    printf("Sent %u bits of %lu\n", totalBytesSent, sizeof(Packet));
   }
 }
 
