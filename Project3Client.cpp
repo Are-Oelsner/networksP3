@@ -104,7 +104,8 @@ int main (int argc, char *argv[]) {
   p_query.X        = 0x0;
   p_query.length   = 0x1;
   genQueryID(&p_query);
-  p_query.checksum = 0x0024;
+  p_query.checksum = 0x0000;
+  p_query.checksum = checksum(&p_query);
   strcat(p_query.data, hostname);
 
   if(debug) {
@@ -123,7 +124,7 @@ int main (int argc, char *argv[]) {
       printf("Sent %u bits of %lu\n", m_totalBytesSent, sizeof(p_query));
   }
 
-  while(p_rcv.queryID != p_query.queryID) { //TODO add timeout
+  while(p_rcv.queryID != p_query.queryID || p_rcv.version != p_query.version || p_rcv.type != 4 || srcAddr.sin_addr.s_addr != destAddr.sin_addr.s_addr || checksum(&p_rcv) == 0x0000) { //TODO add timeout
     // Receive Message
     fromSize = sizeof(srcAddr);
     if(recvfrom(m_soc, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&srcAddr, &fromSize) <= 0)
@@ -134,7 +135,10 @@ int main (int argc, char *argv[]) {
     printf("Response Received:\n");
     printPacket(&p_rcv);
   }
-  printData(&p_rcv);
+  if(p_rcv.length > 0)
+    printData(&p_rcv);
+  else 
+    printf("No users at hostname %s\n", hostname);
 
   /// Close connection
   close(m_soc);

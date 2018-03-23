@@ -77,6 +77,7 @@ int main (int argc, char *argv[]) {
   for(;;) {// while(true)
     clntLen = sizeof(clntAddr);       // Sets size of in-out parameter
 
+    //TODO while loop checking for version/type etc
     // Block until receive message from a client
     if(recvfrom(sock, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, &clntLen) < 0)
       DieWithError((char*)"recvfrom() failed");
@@ -104,7 +105,8 @@ int main (int argc, char *argv[]) {
     p_rsp.type     = 0x4;
     p_rsp.length   = numEntries;
     p_rsp.queryID  = p_rcv.queryID;
-    p_rsp.checksum = 0x0024;
+    p_rsp.checksum = 0x0000;
+    p_rsp.checksum = checksum(&p_rsp);
     setData(&p_rsp, data, numEntries); 
     if(debug) {
       printf("Packet to send-\n");
