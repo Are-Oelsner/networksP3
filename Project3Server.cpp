@@ -82,13 +82,14 @@ int main (int argc, char *argv[]) {
     while(p_rcv.version != 0x6 || p_rcv.type != 0/* || checksum(&p_rcv) != 0*/) { //TODO add timeout
       if(recvfrom(sock, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, &clntLen) < 0)
         DieWithError((char*)"recvfrom() failed");
+      printf("in while loop\n");
+    printPacket(&p_rcv);
     }
     printf("////////////////////////////////////////////////////\n");
     printf("Handling client %s\n", inet_ntoa(clntAddr.sin_addr));
 
 
-    if(debug)
-      printPacket(&p_rcv);
+    printPacket(&p_rcv);
 
     // Check database and return relevant data
 
