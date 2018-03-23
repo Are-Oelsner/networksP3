@@ -109,7 +109,7 @@ int main (int argc, char *argv[]) {
   //  DieWithError((char*)"Error: received a packet from unknown source.\n");
     //totalBytesReceived += rcvMsgSize;
     //rcvBuffer[totalBytesReceived] = '\0'; 
-    printf("%s%s%s%s\n", p_rcv.version.c_str(), p_rcv.type.c_str(), p_rcv.length.c_str(), p_rcv.queryID.c_str());
+    //printf("%s%s%s%s\n", p_rcv.version.c_str(), p_rcv.type.c_str(), p_rcv.length.c_str(), p_rcv.queryID.c_str());
     printf("Handling client %s\n", inet_ntoa(clntAddr.sin_addr));
     //}
     //HandleUDPClient(sock, clntAddr, cliAddrLen, rcvBuffer);
