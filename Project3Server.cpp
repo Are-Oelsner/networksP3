@@ -96,6 +96,7 @@ int main (int argc, char *argv[]) {
   //  DieWithError((char*)"Error: received a packet from unknown source.\n");
     //totalBytesReceived += rcvMsgSize;
     //rcvBuffer[totalBytesReceived] = '\0'; 
+    p_rcv.printPacket();
     printf("Handling client %s\n", inet_ntoa(clntAddr.sin_addr));
     //}
     //HandleUDPClient(sock, clntAddr, cliAddrLen, rcvBuffer);
