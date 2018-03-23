@@ -9,7 +9,7 @@
 
 #define MAXPENDING 5 //Maximum outstanding connection requests
 
-bool debug = false; // determines information output
+bool debug = true; // determines information output
 
 /* function declarations */
 int main (int argc, char *argv[]) {
@@ -86,7 +86,8 @@ int main (int argc, char *argv[]) {
       printf("Handling client %s\n", inet_ntoa(clntAddr.sin_addr));
 
 
-      printPacket(&p_rcv);
+      if(debug)
+        printPacket(&p_rcv);
 
       // Check database and return relevant data
 
@@ -108,16 +109,20 @@ int main (int argc, char *argv[]) {
       if(data != nullPtr)
         setData(&p_rsp, data, numEntries); 
       p_rsp.checksum = 0x0000;
+      p_rsp.checksum = Checksum((void*)&p_rsp, sizeof(p_rsp));
       //p_rsp.checksum = checksum(&p_rsp);
 
-      printPacket(&p_rsp);
+      if(debug)
+        printPacket(&p_rsp);
 
-      printf("Sending Response:\n");
+      if(debug)
+        printf("Sending Response:\n");
       // Send Response message
       if(sendto(sock, &p_rsp, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, sizeof(clntAddr)) <= 0)
         DieWithError((char*)"sendto() sent a different number of bytes than expected");
 
-      printf("Message Sent\n");
+      if(debug)
+        printf("Message Sent\n");
     }
 
   }

@@ -5,7 +5,7 @@
 #include "NetworkHeader.h"
 #include "Packet.cpp"
 
-bool debug = false;
+bool debug = true;
 
 /* function declarations */
 
@@ -107,6 +107,7 @@ int main (int argc, char *argv[]) {
   strcat(p_query.data, hostname);
   p_query.checksum = 0x0000;
   //p_query.checksum = checksum(&p_query);
+  p_query.checksum = Checksum((void*)&p_query, sizeof(p_query));
 
   if(debug) {
     printf("Sending Query\nPacket:");
