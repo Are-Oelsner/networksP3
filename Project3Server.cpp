@@ -53,8 +53,6 @@ int main (int argc, char *argv[]) {
   }
 
   /* Networking code starts here */
-  open_database(fileName);
-
 
   /// Create a UDP socket
   if((sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
@@ -89,7 +87,9 @@ int main (int argc, char *argv[]) {
 
     char** data;
     int numEntries;
+    open_database(fileName);
     data = lookup_user_names(p_rcv.data, &numEntries);
+    close_database();
     if(data == nullPtr)  // invalid hostname - X defaults to 1
       p_rsp.X = 0x0;   
     else
@@ -114,7 +114,6 @@ int main (int argc, char *argv[]) {
 
   }
   close(sock);
-  close_database();
   exit(0);
   printf("Exited\n");
 }
