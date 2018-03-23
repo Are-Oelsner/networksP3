@@ -3,7 +3,7 @@
  */
 
 #include "NetworkHeader.h"
-#include "Packet.h"
+#include "Packet.cpp"
 
 /* function declarations */
 
@@ -68,11 +68,8 @@ int main (int argc, char *argv[]) {
   struct sockaddr_in srcAddr;       // sockaddr_in received
 
   Packet p_query;                     // Outgoing Packet
-  //char m_query[BUFFSIZE];             // Outgoing message
-  char* m_query;             // Outgoing message
 
   Packet p_rcv;                     // Incoming Packet
-  char m_rcv[BUFFSIZE];             // Incoming ACK message buffer
 
   unsigned int fromSize;            // Size of received packet
   int m_bytesReceived;              // Bytes received
@@ -106,59 +103,41 @@ int main (int argc, char *argv[]) {
 
   /// Communication with server
   // Creates Query message
-  p_query.setVersion((char*)"0110");
-  p_query.setType((char*)"000");
-  p_query.setX((char*)"0");
-  p_query.setQueryID((char*)"8675309188843228");
-  p_query.setData(hostname); 
-  p_query.computeChecksum();
+  p_query.version  = 0x6;
+  p_query.type     = 0x0;
+  p_query.X        = 0x0;
+  p_query.length   = 0x1;
+  p_query.queryID  = 0xa37c;
+  p_query.checksum = 0x0024;
+  strcpy(p_query.data, hostname);
 
-  p_query.printPacket();
-
-  m_query = p_query.constructMSG();
+  printPacket(&p_query);
 
   // Send message
   int m_bytesSent = 0;
   int m_totalBytesSent = 0;
-  while(m_bytesSent != (int)strlen(m_query)) {
-    if((m_bytesSent = sendto(m_soc, m_query, (unsigned int)strlen(m_query), 0, (struct sockaddr *)&destAddr, sizeof(destAddr))) <= 0)
+  cout << sizeof(p_query) << " " << sizeof(Packet) << endl; //TODO remove
+  while(m_bytesSent != (int)sizeof(p_query)) {
+    if((m_bytesSent = sendto(m_soc, &p_query, sizeof(Packet), 0, (struct sockaddr *)&destAddr, sizeof(destAddr))) <= 0)
       DieWithError((char*)"sendto() sent a different number of bytes than expected");
     m_totalBytesSent += m_bytesSent;
-    printf("Sent %u bits of %lu\n", m_totalBytesSent, strlen(m_query));
+    printf("Sent %u bits of %lu\n", m_totalBytesSent, sizeof(p_query));
   }
 
-  //change to while((m_bytesReceived = recv(m_soc, m_rcv, BUFFSIZE-1, 0)) <= 0)
   // Receive Message
   fromSize = sizeof(srcAddr);
   m_totalBytesReceived = 0;
   printf("ServerMessage: \t");
-  while(strchr(m_rcv, '\n') == NULL) {
+  while(m_bytesReceived < (int)sizeof(Packet)) {
     printf("Receiving Message\n");
-    if((m_bytesReceived = recvfrom(m_soc, m_rcv, BUFFSIZE-1, 0, (struct sockaddr *)&srcAddr, &fromSize)) <= 0)
+    if((m_bytesReceived = recvfrom(m_soc, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&srcAddr, &fromSize)) <= 0)
       DieWithError((char*)"recv() failed or connection closed prematurely");
     printf("Receiving Message - After If\n");
     m_totalBytesReceived += m_bytesReceived;
-    m_rcv[m_bytesReceived] = '\0'; 
-    printf("%s", m_rcv);
-  }
-  printf("\n");
-  if(destAddr.sin_addr.s_addr != srcAddr.sin_addr.s_addr) {
-    DieWithError((char*)"Error: received a packet from unknown source.\n");
+    printf("Received %u bits of %lu\n", m_totalBytesReceived, sizeof(Packet));
   }
 
-  // Parse m_rcv into Packet object
-  p_rcv.parse(m_rcv);
-
-
-//// Creates BYE message
-//m_type = strtok(m_rcv, " ");
-//char * m_cookie = strtok(NULL, " ");
-//strcpy(m_bye, m_vers); 
-//strcat(m_bye, "BYE "); 
-//strcat(m_bye, m_cookie);
-//strcat(m_bye, "\n");
-////printf("Bye message: %s/n", m_bye);
-
+  printPacket(&p_rcv);
 
   /// Close connection
   close(m_soc);

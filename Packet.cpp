@@ -1,180 +1,72 @@
-#include "Packet.h"
+/* Author: Are Oelsner
+ * Networks Project 3
+ * Packet class for constructing and parsing packets
+ */
 
-Packet::
-Packet() {
-  version = (char*)"0110";
-  type = (char*)"000";
-  X = (char*)"0";
-  length = (char*)"00000001";
-  queryID = (char*)"8675309188843228";
-  checksum =(char*)"1111111111111111";//TODO
-  q_data = (char*)"mathcs04";
-}
+#include <vector>
+#include <string>
+#include <iostream>
+#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+using namespace std;
 
-Packet::
-~Packet() {
-}
+struct Packet {
+  // Packet Components
+  unsigned char version;    // Version field (4 bits) set to 0110 or 0x6
+  unsigned char type;       // Type field (3 bits) Query: 000, Resp: 100
+  unsigned char X;          // X (1 bit) 0 for Q, 0 for neg response, 1 for good response
+  unsigned char length;     // Length field (8 bit) unsigned char represents # data items
+  unsigned short queryID;    // Query-ID randomly genned 16 bit num client
+  unsigned short checksum;   // Checksum(16 bit) ones complement checksum of entire packet
+  char data[2048];        // Query data stores null terminated hostname string
+};
 
-char*
-Packet::
-constructMSG() {
-  char msg[8192];
-  strcpy(msg, version);            // Sets version field
-  strcat(msg, type);            // Sets type field
-  strcat(msg, X);         // Sets first name field
-  strcat(msg, length);
-  strcat(msg, queryID);          // Sets last name field
-  strcat(msg, checksum);
-  if(strcmp(q_data, "") != 0)
-    strcat(msg, q_data);
-  else {
-    for(unsigned int i = 0; i < r_data.size(); i++) {
-      int size = strlen(r_data[i].first);
-      if(size > 8) {
-        printf("Error: username %s of size, %u, too big", r_data[i].first, size);
-        return NULL;
-      }
-      strcat(msg, r_data[i].first);
-      while(size < 8) { // Makes sure each username takes 8 bits
-        strcat(msg, (char*)"*"); // Character to be replaced by null character
-        size++;
-      }
-      strcat(msg, r_data[i].second);
-    }
-  }
-  char* tmp = strchr(msg, '*'); // Replaces all tmp *'s with null characters
-  while(tmp != NULL) {
-    tmp[0] = '\0';
-    tmp = strchr(tmp, '*');
-  }
-  msg1 = (char*) malloc (strlen(msg));
-  msg1 = msg;
-  return msg1;
-}
+///Functions
+
+//void
+//Packet::
+//genQueryID() {
+//}
+//
+//int 
+//Packet::
+//computeChecksum() {
+//}
+//
+//int
+//Packet::
+//checkChecksum() {
+//}
+//
+//void
+//Packet::
+//setData(char* hostname) {
+//  q_data = hostname;
+//  length = (char*)"00000001";
+//}
 
 void
-Packet::
-parse(char* msg) {
-  version = (char*) malloc (4);
-  type = (char*) malloc (3);
-  X = (char*) malloc (1);
-  length = (char*) malloc (8);
-  queryID = (char*) malloc (16);
-  checksum = (char*) malloc (16);
-
-  int offset = 0;
-  strncpy(version,  (const char*)&msg[offset],        4);
-  strncpy(type,     (const char*)&msg[offset += 4],   3);
-  strncpy(X,        (const char*)&msg[offset += 3],   1);
-  strncpy(length,   (const char*)&msg[offset += 1],   8);
-  strncpy(queryID,  (const char*)&msg[offset += 16],  16);
-  strncpy(checksum, (const char*)&msg[offset += 16],  16);
-  //int Length[9];
-  //sprintf(Length, "%d", length);
-
-  int Length = atoi(length);
-  for(int i = 0; i < Length; i++) {
-
-  }
-}
-
-void
-Packet::
-genQueryID() {
-}
-
-int 
-Packet::
-computeChecksum() {
-}
-
-int
-Packet::
-checkChecksum() {
-}
-
-void
-Packet::
-setData(char* hostname) {
-  q_data = hostname;
-  length = (char*)"00000001";
-}
-
-void
-Packet::
-setData(char** data, int numEntries) {
+setData(struct Packet *p, char** data, int numEntries) {
   char* name;
-  int time;
+  char* time;
+  int size;
   for(int i = 0; i < numEntries; i++) {
     name = strtok(data[i], ":");
-    time = atoi(strtok(NULL, ":"));
-    pair<char*, char*> tmp = make_pair(name, toBinary(time));
-    r_data.emplace_back(tmp);
+    time = strtok(NULL, ":");
+    size = strlen(name);
+    strcat(p->data, name);
+    for(int j = size; j < 8; j++)
+      strcat(p->data, (char*)' ');
+    strcat(p->data, time);
   }
 }
 
 void
-Packet::
-printPacket() {
-  printf("\n%s%s%s%s%s\n%s", version, type, X, length, queryID, checksum);
+printPacket(const struct Packet *p) {
+  printf("\n| v| t|X length|      queryID  |\n");
+  printf("%u%u%u%u%u\n", p->version, p->type, p->X, p->length, p->queryID);
+  printf("     checksum  |   Data \n");
+  printf("%u%s\n", p->checksum, p->data);
 }
-
-char*
-Packet::
-printData() {
-  if(strcmp(q_data, "") != 0)
-    return q_data;
-  else {
-    char* data = (char*)"";
-    int size = 0;
-    for(int i = 0; i < (int)r_data.size(); i++) {
-      strcat(data, r_data[i].first);
-      size = strlen(r_data[i].first);
-      while(size < 8) { // Makes sure each username takes 8 bits
-        strcat(data, (char*)"*"); // Character to be replaced by null character
-        size++;
-      }
-      strcat(data, r_data[i].second);
-    }
-    char* tmp = strchr(data, '*'); // Replaces all tmp *'s with null characters
-    while(tmp != NULL) {
-      tmp[0] = '0';
-      tmp = strchr(tmp, '*');
-    }
-    return data;
-  }
-}
-
-char*
-Packet::
-toBinary(const int c) {
-  char* binary = (char*)"";
-  unsigned int mask = 1 << (sizeof(int) * 8 - 1);
-  for(int i = 0; i < (int)sizeof(int)*8; i++) {
-    if((c & mask) == 0)
-      binary[i] = '0';
-    else 
-      binary[i] = '1';
-    mask >>= 1;
-  }
-  return binary;
-}
-//  char* binary = (char*)""; // unsigned chars for both of these?
-//unsigned char byte[4];
-//byte[0] = (c >> 24) & 0xFF;
-//byte[1] = (c >> 16) & 0xFF;
-//byte[2] = (c >> 8) & 0xFF;
-//byte[3] = c & 0xFF;
-//char* b0 = (char*)&byte[0];
-//char* b1 = (char*)&byte[1];
-//char* b2 = (char*)&byte[2];
-//char* b3 = (char*)&byte[3];
-//strcpy(binary, b0);
-//strcat(binary, b1);
-//strcat(binary, b2);
-//strcat(binary, b3);
-//printf("Binary: %s\n", binary);
-//return binary;
-
-
 
