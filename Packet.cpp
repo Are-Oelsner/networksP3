@@ -116,7 +116,7 @@ setData(char** data, int numEntries) {
 void
 Packet::
 printPacket() {
-  printf("%s%s%s%s%s\n%s%s\n", version, type, X, length, queryID, checksum, printData());
+  printf("\n%s%s%s%s%s\n%s%s\n", version, type, X, length, queryID, checksum, printData());
 }
 
 char*

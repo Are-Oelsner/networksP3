@@ -95,7 +95,6 @@ int main (int argc, char *argv[]) {
     //totalBytesReceived += rcvMsgSize;
     //rcvBuffer[totalBytesReceived] = '\0'; 
     printf("Handling client %s\n", inet_ntoa(clntAddr.sin_addr));
-    printf("%s", rcvBuffer);
     //}
     HandleUDPClient(sock, clntAddr, cliAddrLen, rcvBuffer);
 
