@@ -24,23 +24,20 @@ struct Packet {
 
 ///Functions
 
-//void
-//Packet::
-//genQueryID() {
-//}
-//
+void
+genQueryID(struct Packet *p) {
+  p->queryID = (unsigned short) rand() % 2147483648;
+}
+
 //int 
-//Packet::
 //computeChecksum() {
 //}
 //
 //int
-//Packet::
 //checkChecksum() {
 //}
 //
 //void
-//Packet::
 //setData(char* hostname) {
 //  q_data = hostname;
 //  length = (char*)"00000001";
@@ -72,7 +69,6 @@ printData(const struct Packet *p) {
     printf("%.*s\t%.*s\n", 8, p->data+i, 10, p->data+i+8);
   }
 }
-
 
 void
 printPacket(const struct Packet *p) {

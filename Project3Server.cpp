@@ -103,7 +103,7 @@ int main (int argc, char *argv[]) {
     p_rsp.version  = 0x6;
     p_rsp.type     = 0x4;
     p_rsp.length   = numEntries;
-    p_rsp.queryID  = 0xa37c;
+    p_rsp.queryID  = p_rcv.queryID;
     p_rsp.checksum = 0x0024;
     setData(&p_rsp, data, numEntries); 
     if(debug) {

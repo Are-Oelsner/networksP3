@@ -18,7 +18,7 @@ int main (int argc, char *argv[]) {
   int timeout;
   int maxRetries;
   char *hostname;
-  
+
 
   char c;
   int i;
@@ -49,7 +49,7 @@ int main (int argc, char *argv[]) {
           serverHost = argv[i+1];
           break;
         case 'p':                 // Port Case
-            serverPort = atoi(argv[i+1]);
+          serverPort = atoi(argv[i+1]);
           break;
         default:
           break;
@@ -107,7 +107,7 @@ int main (int argc, char *argv[]) {
   p_query.type     = 0x0;
   p_query.X        = 0x0;
   p_query.length   = 0x1;
-  p_query.queryID  = 0xa37c;
+  genQueryID(&p_query);
   p_query.checksum = 0x0024;
   strcat(p_query.data, hostname);
 
@@ -141,8 +141,8 @@ int main (int argc, char *argv[]) {
   }
 
   if(debug) {
-  printf("Packet Received:\n");
-  printPacket(&p_rcv);
+    printf("Packet Received:\n");
+    printPacket(&p_rcv);
   }
   printData(&p_rcv);
 
