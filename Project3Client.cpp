@@ -5,7 +5,7 @@
 #include "NetworkHeader.h"
 #include "Packet.cpp"
 
-bool debug = true;
+bool debug = false;
 
 /* function declarations */
 
@@ -126,10 +126,11 @@ int main (int argc, char *argv[]) {
   }
 
   fromSize = sizeof(srcAddr);
-  while(p_rcv.queryID != p_query.queryID || p_rcv.version != p_query.version || p_rcv.type != 4 || srcAddr.sin_addr.s_addr != destAddr.sin_addr.s_addr/* || checksum(&p_rcv) != 0*/) { //TODO add timeout
+  while(p_rcv.queryID != p_query.queryID || p_rcv.version != p_query.version || p_rcv.type != 4 || srcAddr.sin_addr.s_addr != destAddr.sin_addr.s_addr || Checksum((void*)&p_rcv, sizeof(p_rcv)) != 0) { //TODO add timeout
     // Receive Message
     if(recvfrom(m_soc, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&srcAddr, &fromSize) <= 0)
       DieWithError((char*)"recv() failed or connection closed prematurely");
+    if(debug)
       printPacket(&p_rcv);
   }
 

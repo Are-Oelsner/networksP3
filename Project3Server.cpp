@@ -81,7 +81,7 @@ int main (int argc, char *argv[]) {
     // Block until receive message from a client
     if(recvfrom(sock, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, &clntLen) < 0)
       DieWithError((char*)"recvfrom() failed");
-    if(p_rcv.version == 0x6 || p_rcv.type == 0/* || checksum(&p_rcv) != 0*/) { //TODO add timeout
+    if(p_rcv.version == 0x6 || p_rcv.type == 0 || Checksum((void*)&p_rcv, sizeof(p_rcv)) != 0) { //TODO add timeout
       printf("////////////////////////////////////////////////////\n");
       printf("Handling client %s\n", inet_ntoa(clntAddr.sin_addr));
 
