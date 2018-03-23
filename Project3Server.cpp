@@ -6,12 +6,25 @@
 #include "NetworkHeader.h"
 #include "Packet.h"
 #include "Database.cpp"
+#include <string>
+using namespace std;
 
 #define MAXPENDING 5 //Maximum outstanding connection requests
 
 /* function declarations */
 // UDP Client handling function
-void HandleUDPClient(int sock, struct sockaddr_in clntAddr, unsigned int cliAddrLen, Packet p_rcv); 
+struct packet {
+      string version;              // Version field (4 bits) set to 0110 or 0x6
+      string type;                 // Type field (3 bits) Query: 000, Resp: 100
+      string X;                    // X (1 bit) 0 for Q, 0 for neg response, 1 for good response
+      string length;      // Length field (8 bit) unsigned char represents # data items
+      string queryID;             // Query-ID randomly genned 16 bit num client
+                                     //    uses to map responses to outstanding requests
+      string checksum;            // Checksum(16 bit) ones complement checksum of entire packet
+      string q_data;                  // Query data stores null terminated hostname string
+      //vector<pair<string, string>> r_data;    // Response Data- (8 char + 4 bytes)/pair
+};
+void HandleUDPClient(int sock, struct sockaddr_in clntAddr, unsigned int cliAddrLen, packet p_rcv); 
 
 
 int main (int argc, char *argv[]) {
@@ -80,7 +93,7 @@ int main (int argc, char *argv[]) {
 
   //int rcvMsgSize;                   // Bytes received
   //int totalBytesReceived;         // Tota bytes received 
-  Packet p_rcv;
+  packet p_rcv;
 
   for(;;) {// while(true)
     clntLen = sizeof(clntAddr);       // Sets size of in-out parameter
@@ -90,13 +103,13 @@ int main (int argc, char *argv[]) {
     //printf("ServerMessage: \t");
     //while(strchr(rcvBuffer, '\n') == NULL) {
     //if((recvMsgSize = recvfrom(sock, rcvBuffer, BUFFSIZE, 0, (struct sockaddr *)&clntAddr, &cliAddrLen)) < 0)
-    if((recvMsgSize = recvfrom(sock, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, &cliAddrLen)) < 0)
+    if((recvMsgSize = recvfrom(sock, &p_rcv, sizeof(packet), 0, (struct sockaddr *)&clntAddr, &cliAddrLen)) < 0)
       DieWithError((char*)"recvfrom() failed");
   //if(clntAddr.sin_addr.s_addr != servAddr.sin_addr.s_addr) //TODO do I need this?
   //  DieWithError((char*)"Error: received a packet from unknown source.\n");
     //totalBytesReceived += rcvMsgSize;
     //rcvBuffer[totalBytesReceived] = '\0'; 
-    p_rcv.printPacket();
+    printf("%s%s%s%s\n", p_rcv.version, p_rcv.type, p_rcv.length, p_rcv.queryID);
     printf("Handling client %s\n", inet_ntoa(clntAddr.sin_addr));
     //}
     //HandleUDPClient(sock, clntAddr, cliAddrLen, rcvBuffer);
@@ -111,41 +124,45 @@ int main (int argc, char *argv[]) {
 }
 
 
-void HandleUDPClient(int sock, struct sockaddr_in clntAddr, unsigned int cliAddrLen, Packet p_rcv) {
+void HandleUDPClient(int sock, struct sockaddr_in clntAddr, unsigned int cliAddrLen, packet p_rcv) {
 
   /// Variables
-  Packet p_msg;                     // Response Packet
+  packet p_msg;                     // Response Packet
   char* m_msg;             // Outgoing Response message
   char** data;
   int numEntries;
 
   // Construct Packet from received Query
-  p_rcv.printPacket();
+  //p_rcv.printPacket();
 
   // Check database and return relevant data
-  data = lookup_user_names(p_rcv.getQData(), &numEntries);
+  //data = lookup_user_names(p_rcv.getQData(), &numEntries);
   if(data == nullPtr)  // invalid hostname - X defaults to 1
-    p_msg.setX((char*)"0");   
+    //p_msg.setX((char*)"0");   
 
 
   // Construct Response
-  p_msg.setVersion((char*)"0110");
-  p_msg.setType((char*)"100"); 
-  p_msg.setQueryID((char*)"8675309188843228"); // TODO convert to random gen
-  p_msg.setData(data, numEntries); 
-  //p_msg.computeChecksum();
+//p_msg.setVersion((char*)"0110");
+//p_msg.setType((char*)"100"); 
+//p_msg.setQueryID((char*)"8675309188843228"); // TODO convert to random gen
+//p_msg.setData(data, numEntries); 
+////p_msg.computeChecksum();
 
-  m_msg = p_msg.constructMSG();
+//m_msg = p_msg.constructMSG();
+p_msg.version = "0110";
+p_msg.type = "100";
+p_msg.X = "0";
+p_msg.queryID = "1234567812345678";
 
-  printf("Sending Message: %s\n", p_msg.constructMSG());
+  //printf("Sending Message: %s\n", p_msg.constructMSG());
   // Send Response message
   int bytesSent = 0;
   int totalBytesSent = 0;
-  while(totalBytesSent < sizeof(Packet)) {
-    if((bytesSent = sendto(sock, &p_msg, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, sizeof(clntAddr))) <= 0)
+  while(totalBytesSent < sizeof(packet)) {
+    if((bytesSent = sendto(sock, &p_msg, sizeof(packet), 0, (struct sockaddr *)&clntAddr, sizeof(clntAddr))) <= 0)
       DieWithError((char*)"sendto() sent a different number of bytes than expected");
     totalBytesSent += bytesSent;
-    printf("Sent %u bits of %lu\n", totalBytesSent, sizeof(Packet));
+    printf("Sent %u bits of %lu\n", totalBytesSent, sizeof(packet));
   }
 }
 

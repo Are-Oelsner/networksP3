@@ -3,9 +3,21 @@
  */
 
 #include "NetworkHeader.h"
-#include "Packet.h"
+#include <string>
+using namespace std;
 
 /* function declarations */
+struct packet {
+      string version;              // Version field (4 bits) set to 0110 or 0x6
+      string type;                 // Type field (3 bits) Query: 000, Resp: 100
+      string X;                    // X (1 bit) 0 for Q, 0 for neg response, 1 for good response
+      string length;      // Length field (8 bit) unsigned char represents # data items
+      string queryID;             // Query-ID randomly genned 16 bit num client
+                                     //    uses to map responses to outstanding requests
+      string checksum;            // Checksum(16 bit) ones complement checksum of entire packet
+      string q_data;                  // Query data stores null terminated hostname string
+      //vector<pair<string, string>> r_data;    // Response Data- (8 char + 4 bytes)/pair
+};
 
 int main (int argc, char *argv[]) {
 
@@ -67,9 +79,9 @@ int main (int argc, char *argv[]) {
   struct sockaddr_in destAddr;      // sockaddr_in sent
   struct sockaddr_in srcAddr;       // sockaddr_in received
 
-  Packet p_query;                     // Outgoing Packet
+  packet p_query;                     // Outgoing Packet
 
-  Packet p_rcv;                     // Incoming Packet
+  packet p_rcv;                     // Incoming Packet
 
   unsigned int fromSize;            // Size of received packet
   int m_bytesReceived;              // Bytes received
@@ -103,34 +115,38 @@ int main (int argc, char *argv[]) {
 
   /// Communication with server
   // Creates Query message
-  p_query.setVersion((char*)"0110");
-  p_query.setType((char*)"000");
-  p_query.setX((char*)"0");
-  p_query.setQueryID((char*)"8675309188843228");
-  p_query.setData(hostname); 
-  p_query.computeChecksum();
+//p_query.setVersion((char*)"0110");
+//p_query.setType((char*)"000");
+//p_query.setX((char*)"0");
+//p_query.setQueryID((char*)"8675309188843228");
+//p_query.setData(hostname); 
+//p_query.computeChecksum();
+p_query.version = "0110";
+p_query.type = "100";
+p_query.X = "0";
+p_query.queryID = "1234567812345678";
 
-  p_query.printPacket();
+  //p_query.printpacket();
 
 
   // Send message
   int m_bytesSent = 0;
   int m_totalBytesSent = 0;
-  while(m_bytesSent < sizeof(Packet)) {
-    if((m_bytesSent = sendto(m_soc, &p_query, (unsigned int)sizeof(Packet), 0, (struct sockaddr *)&destAddr, sizeof(destAddr))) < 0)
+  while(m_bytesSent < sizeof(packet)) {
+    if((m_bytesSent = sendto(m_soc, &p_query, (unsigned int)sizeof(packet), 0, (struct sockaddr *)&destAddr, sizeof(destAddr))) < 0)
       DieWithError((char*)"sendto() sent a different number of bytes than expected");
     m_totalBytesSent += m_bytesSent;
-    printf("Sent %u bits of %lu\n", m_totalBytesSent, sizeof(Packet));
+    printf("Sent %u bits of %lu\n", m_totalBytesSent, sizeof(packet));
   }
 
   // Receive Message
   fromSize = sizeof(srcAddr);
   m_totalBytesReceived = 0;
   printf("ServerMessage: \t");
-  if((m_bytesReceived = recvfrom(m_soc, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&srcAddr, &fromSize)) <= 0)
+  if((m_bytesReceived = recvfrom(m_soc, &p_rcv, sizeof(packet), 0, (struct sockaddr *)&srcAddr, &fromSize)) <= 0)
     DieWithError((char*)"recv() failed or connection closed prematurely");
   m_totalBytesReceived += m_bytesReceived;
-  printf("Received %u bits of %lu\n", m_totalBytesReceived, sizeof(Packet));
+  printf("Received %u bits of %lu\n", m_totalBytesReceived, sizeof(packet));
   //if(destAddr.sin_addr.s_addr != srcAddr.sin_addr.s_addr) {
   //  DieWithError((char*)"Error: received a packet from unknown source.\n");
   //}
