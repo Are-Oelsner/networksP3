@@ -67,6 +67,6 @@ printPacket(const struct Packet *p) {
   printf("\nv\tt\tX\tlength\tqueryID\n");
   printf("%u\t%u\t%u\t%u\t%u\n", p->version, p->type, p->X, p->length, p->queryID);
   printf("checksum\tData \n");
-  printf("%u\t%s\n", p->checksum, p->data);
+  printf("%u\t\t%s\n", p->checksum, p->data);
 }
 

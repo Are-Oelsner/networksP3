@@ -109,7 +109,7 @@ int main (int argc, char *argv[]) {
   p_query.length   = 0x1;
   p_query.queryID  = 0xa37c;
   p_query.checksum = 0x0024;
-  strcpy(p_query.data, hostname);
+  strcat(p_query.data, hostname);
 
   printf("Sending Query\nPacket:\n");
   printPacket(&p_query);

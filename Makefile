@@ -42,8 +42,11 @@ echo:
 o:
 	vim -p Project3Server.cpp Project3Client.cpp Packet.cpp
 
-gdb:
-	gdb Project3Client 
+gc:
+	gdb ./ProjectClient 
+
+gs:
+	gdb ./Project3Client 
 
 clean:
 	rm Project3Client
