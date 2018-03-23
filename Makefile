@@ -29,6 +29,9 @@ client41n1:
 server:
 	./Project3Server -p 31201 -d database.dat
 
+server1:
+	./ProjectServer -p 31201 -d database.dat
+
 echo:
 	./StdoutEchoServer 31201 
 	#StdoutEchoServer <port> #replace <>
