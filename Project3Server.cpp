@@ -9,7 +9,7 @@
 
 #define MAXPENDING 5 //Maximum outstanding connection requests
 
-bool debug = true; // determines information output
+bool debug = false; // determines information output
 
 /* function declarations */
 int main (int argc, char *argv[]) {
