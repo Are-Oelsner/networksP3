@@ -9,6 +9,8 @@
 
 #define MAXPENDING 5 //Maximum outstanding connection requests
 
+bool debug = false; // determines information output
+
 /* function declarations */
 int main (int argc, char *argv[]) {
 
@@ -78,10 +80,12 @@ int main (int argc, char *argv[]) {
     // Block until receive message from a client
     if(recvfrom(sock, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, &clntLen) < 0)
       DieWithError((char*)"recvfrom() failed");
+    printf("////////////////////////////////////////////////////\n");
     printf("Handling client %s\n", inet_ntoa(clntAddr.sin_addr));
 
 
-    printPacket(&p_rcv);
+    if(debug)
+      printPacket(&p_rcv);
 
     // Check database and return relevant data
 
@@ -102,15 +106,17 @@ int main (int argc, char *argv[]) {
     p_rsp.queryID  = 0xa37c;
     p_rsp.checksum = 0x0024;
     setData(&p_rsp, data, numEntries); 
-    printf("Packet to send-\n");
-    printPacket(&p_rsp);
+    if(debug) {
+      printf("Packet to send-\n");
+      printPacket(&p_rsp);
 
-
-    printf("Sending Message:\n");
+      printf("Sending Message:\n");
+    }
     // Send Response message
     if(sendto(sock, &p_rsp, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, sizeof(clntAddr)) <= 0)
       DieWithError((char*)"sendto() sent a different number of bytes than expected");
-    printf("Message Sent\n");
+    if(debug)
+      printf("Message Sent\n");
 
   }
   close(sock);

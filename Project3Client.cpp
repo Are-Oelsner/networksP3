@@ -5,6 +5,8 @@
 #include "NetworkHeader.h"
 #include "Packet.cpp"
 
+bool debug = false;
+
 /* function declarations */
 
 int main (int argc, char *argv[]) {
@@ -91,13 +93,11 @@ int main (int argc, char *argv[]) {
   // www.cplusplus.com/forum/general/92837/
   if((remoteHost = gethostbyname(hostName)) != NULL) {  // If host is domain name
     destAddr.sin_addr.s_addr =  *((unsigned long *) remoteHost->h_addr_list[0]);
-    //printf("Name: %u\n", *remoteHost->h_addr_list[0]);
   }
   else { // Host address is address
     addr = inet_addr(hostName);   // converts format of address to binary
     remoteHost = gethostbyaddr((char *)&addr, 4, AF_INET);
     destAddr.sin_addr.s_addr = addr;  // Internet Address 32 bits
-    //printf("Address: %s, \t addr: %u\n", hostName, addr);
   }
 
 
@@ -111,8 +111,10 @@ int main (int argc, char *argv[]) {
   p_query.checksum = 0x0024;
   strcat(p_query.data, hostname);
 
-  printf("Sending Query\nPacket:");
-  printPacket(&p_query);
+  if(debug) {
+    printf("Sending Query\nPacket:");
+    printPacket(&p_query);
+  }
 
   // Send message
   int m_bytesSent = 0;
@@ -121,22 +123,28 @@ int main (int argc, char *argv[]) {
     if((m_bytesSent = sendto(m_soc, &p_query, sizeof(Packet), 0, (struct sockaddr *)&destAddr, sizeof(destAddr))) <= 0)
       DieWithError((char*)"sendto() sent a different number of bytes than expected");
     m_totalBytesSent += m_bytesSent;
-    printf("Sent %u bits of %lu\n", m_totalBytesSent, sizeof(p_query));
+    if(debug)
+      printf("Sent %u bits of %lu\n", m_totalBytesSent, sizeof(p_query));
   }
 
   // Receive Message
   fromSize = sizeof(srcAddr);
   m_totalBytesReceived = 0;
-  printf("Receiving Message\n");
+  if(debug)
+    printf("Receiving Message\n");
   while(m_bytesReceived < (int)sizeof(Packet)) {
     if((m_bytesReceived = recvfrom(m_soc, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&srcAddr, &fromSize)) <= 0)
       DieWithError((char*)"recv() failed or connection closed prematurely");
     m_totalBytesReceived += m_bytesReceived;
-    printf("Received %u bits of %lu\n", m_totalBytesReceived, sizeof(Packet));
+    if(debug)
+      printf("Received %u bits of %lu\n", m_totalBytesReceived, sizeof(Packet));
   }
 
+  if(debug) {
   printf("Packet Received:\n");
   printPacket(&p_rcv);
+  }
+  printData(&p_rcv);
 
   /// Close connection
   close(m_soc);
