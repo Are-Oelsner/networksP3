@@ -64,6 +64,43 @@ checksum(struct Packet *p) {
   return sum;
 }
 
+unsigned short
+Checksum(struct Packet *p) {
+  unsigned short c1 = p->version;
+  c1 <<= 3;
+  c1 += p->type;
+  c1 <<= 1;
+  c1 += p->X;
+  c1 <<= 8;
+  c1 += p->length;
+  unsigned short c2 = p->queryID;
+  unsigned short c3 = p->checksum;
+  int size = strlen(p->data);
+  unsigned short* cx;
+  int i = 0;
+  int k = 0;
+  while(i < size) {
+    cx[k] = 0x0000;
+    for(int j = 0; j < 16; j++) {
+      if(i < size) 
+        cx[j] = p->data[i];
+      else
+        cx[j] = '0';
+      i++;
+    }
+    printf("%u\t%u\n", k, cx[k]);
+    k++;
+  }
+  unsigned short sum = 0x0000;
+  for(int l = 0; l < k; l++)
+    sum = sum ^ cx[l];
+  sum = sum ^ c1;
+  sum = sum ^ c2;
+  sum = sum ^ c3;
+  return sum;
+}
+
+
 void
 setData(struct Packet *p, char** data, int numEntries) {
   char* name;

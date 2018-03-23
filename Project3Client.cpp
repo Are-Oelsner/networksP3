@@ -124,11 +124,13 @@ int main (int argc, char *argv[]) {
       printf("Sent %u bits of %lu\n", m_totalBytesSent, sizeof(p_query));
   }
 
-  while(p_rcv.queryID != p_query.queryID || p_rcv.version != p_query.version || p_rcv.type != 4 || srcAddr.sin_addr.s_addr != destAddr.sin_addr.s_addr || checksum(&p_rcv) == 0x0000) { //TODO add timeout
+  fromSize = sizeof(srcAddr);
+  printf("type: %u\n", p_rcv.type);
+  while(p_rcv.queryID != p_query.queryID || p_rcv.version != p_query.version || p_rcv.type != 4 || srcAddr.sin_addr.s_addr != destAddr.sin_addr.s_addr || checksum(&p_rcv) != 0) { //TODO add timeout
     // Receive Message
-    fromSize = sizeof(srcAddr);
     if(recvfrom(m_soc, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&srcAddr, &fromSize) <= 0)
       DieWithError((char*)"recv() failed or connection closed prematurely");
+    printPacket(&p_rcv);
   }
 
   if(debug) {
