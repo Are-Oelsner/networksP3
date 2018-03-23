@@ -79,46 +79,46 @@ int main (int argc, char *argv[]) {
 
     //TODO while loop checking for version/type etc
     // Block until receive message from a client
-    while(p_rcv.version != 0x6 || p_rcv.type != 0/* || checksum(&p_rcv) != 0*/) { //TODO add timeout
     if(recvfrom(sock, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, &clntLen) < 0)
       DieWithError((char*)"recvfrom() failed");
+    if(p_rcv.version == 0x6 || p_rcv.type == 0/* || checksum(&p_rcv) != 0*/) { //TODO add timeout
+      printf("////////////////////////////////////////////////////\n");
+      printf("Handling client %s\n", inet_ntoa(clntAddr.sin_addr));
+
+
+      printPacket(&p_rcv);
+
+      // Check database and return relevant data
+
+      char** data;
+      int numEntries;
+      open_database(fileName);
+      data = lookup_user_names(p_rcv.data, &numEntries);
+      close_database();
+      if(data == nullPtr)  // invalid hostname - X defaults to 1
+        p_rsp.X = 0x0;   
+      else
+        p_rsp.X = 0x1;   
+
+      // Construct Response
+      p_rsp.version  = 0x6;
+      p_rsp.type     = 0x4;
+      p_rsp.length   = numEntries;
+      p_rsp.queryID  = p_rcv.queryID;
+      if(data != nullPtr)
+        setData(&p_rsp, data, numEntries); 
+      p_rsp.checksum = 0x0000;
+      //p_rsp.checksum = checksum(&p_rsp);
+
+      printPacket(&p_rsp);
+
+      printf("Sending Response:\n");
+      // Send Response message
+      if(sendto(sock, &p_rsp, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, sizeof(clntAddr)) <= 0)
+        DieWithError((char*)"sendto() sent a different number of bytes than expected");
+
+      printf("Message Sent\n");
     }
-    printf("////////////////////////////////////////////////////\n");
-    printf("Handling client %s\n", inet_ntoa(clntAddr.sin_addr));
-
-
-    printPacket(&p_rcv);
-
-    // Check database and return relevant data
-
-    char** data;
-    int numEntries;
-    open_database(fileName);
-    data = lookup_user_names(p_rcv.data, &numEntries);
-    close_database();
-    if(data == nullPtr)  // invalid hostname - X defaults to 1
-      p_rsp.X = 0x0;   
-    else
-      p_rsp.X = 0x1;   
-
-    // Construct Response
-    p_rsp.version  = 0x6;
-    p_rsp.type     = 0x4;
-    p_rsp.length   = numEntries;
-    p_rsp.queryID  = p_rcv.queryID;
-    if(data != nullPtr)
-      setData(&p_rsp, data, numEntries); 
-    p_rsp.checksum = 0x0000;
-    //p_rsp.checksum = checksum(&p_rsp);
-
-    printPacket(&p_rsp);
-
-    printf("Sending Response:\n");
-    // Send Response message
-    if(sendto(sock, &p_rsp, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, sizeof(clntAddr)) <= 0)
-      DieWithError((char*)"sendto() sent a different number of bytes than expected");
-
-    printf("Message Sent\n");
 
   }
   close(sock);
