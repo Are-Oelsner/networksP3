@@ -51,22 +51,37 @@ setData(struct Packet *p, char** data, int numEntries) {
   char* name;
   char* time;
   int size;
+  char space[2] = " ";
   for(int i = 0; i < numEntries; i++) {
     name = strtok(data[i], ":");
     time = strtok(NULL, ":");
     size = strlen(name);
     strcat(p->data, name);
     for(int j = size; j < 8; j++)
-      strcat(p->data, (char*)' ');
+      strcat(p->data, space);
+    size = strlen(time);
+    for(int j = size; j < 10; j++)
+      strcat(p->data, space);
     strcat(p->data, time);
   }
 }
 
 void
-printPacket(const struct Packet *p) {
-  printf("\nv\tt\tX\tlength\tqueryID\n");
-  printf("%u\t%u\t%u\t%u\t%u\n", p->version, p->type, p->X, p->length, p->queryID);
-  printf("checksum\tData \n");
-  printf("%u\t\t%s\n", p->checksum, p->data);
+printData(const struct Packet *p) {
+  for(int i = 0; i < p->length*18; i+= 18) {
+    printf("%.*s\t%.*s\n", 8, p->data+i, 10, p->data+i+8);
+  }
 }
+
+
+void
+printPacket(const struct Packet *p) {
+  printf("\nv\tt\tX\tlength\tqueryID\tchecksum\n");
+  printf("%u\t%u\t%u\t%u\t%u\t%u\n", p->version, p->type, p->X, p->length, p->queryID, p->checksum);
+  printData(p);
+}
+
+
+
+
 

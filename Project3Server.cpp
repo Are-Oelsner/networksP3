@@ -86,12 +86,10 @@ int main (int argc, char *argv[]) {
     printPacket(&p_rcv);
 
     // Check database and return relevant data
-    char hostname[100];
-    strcpy(hostname, p_rcv.data);
 
     char** data;
     int numEntries;
-    data = lookup_user_names(hostname, &numEntries);
+    data = lookup_user_names(p_rcv.data, &numEntries);
     if(data == nullPtr)  // invalid hostname - X defaults to 1
       p_rsp.X = 0x0;   
     else
