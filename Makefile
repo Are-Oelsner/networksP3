@@ -9,6 +9,9 @@ client:
 client41:
 	./Project3Client -h 141.166.207.147 -p 31201 -t 10 -i 3 -d mathcs04
 
+client1:
+	./ProjectClient -h mathcs01 -p 31201 -t 10 -i 3 -d mathcs04
+
 #	./Project3Client -f Are -l Oelsner -s :141.166.207.147:31201
 
 client41d:

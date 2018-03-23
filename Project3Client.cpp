@@ -117,12 +117,6 @@ int main (int argc, char *argv[]) {
 
   m_query = p_query.constructMSG();
 
-
-
-  //printf("Query message: %s, %u\n", m_query, strlen(m_query));
-  printf("Query message: %s\t Length:  %lu\n", m_query, strlen(m_query));
-
-
   // Send message
   int m_bytesSent = 0;
   int m_totalBytesSent = 0;
