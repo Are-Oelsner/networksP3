@@ -110,6 +110,7 @@ int main (int argc, char *argv[]) {
     // Send Response message
     if(sendto(sock, &p_rsp, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, sizeof(clntAddr)) <= 0)
       DieWithError((char*)"sendto() sent a different number of bytes than expected");
+    printf("Message Sent\n");
 
   }
   close(sock);

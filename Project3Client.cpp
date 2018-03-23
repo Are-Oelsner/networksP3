@@ -111,7 +111,7 @@ int main (int argc, char *argv[]) {
   p_query.checksum = 0x0024;
   strcat(p_query.data, hostname);
 
-  printf("Sending Query\nPacket:\n");
+  printf("Sending Query\nPacket:");
   printPacket(&p_query);
 
   // Send message
