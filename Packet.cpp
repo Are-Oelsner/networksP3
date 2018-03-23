@@ -147,7 +147,7 @@ printData() {
 
 char*
 Packet::
-toBinary(int c) {
+toBinary(const int c) {
   char* binary = (char*)"";
   unsigned int mask = 1 << (sizeof(int) * 8 - 1);
   for(int i = 0; i < (int)sizeof(int)*8; i++) {

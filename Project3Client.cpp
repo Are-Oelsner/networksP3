@@ -121,7 +121,8 @@ int main (int argc, char *argv[]) {
   int m_bytesSent = 0;
   int m_totalBytesSent = 0;
   while(m_bytesSent != (int)strlen(m_query)) {
-    if((m_bytesSent = sendto(m_soc, m_query, (unsigned int)strlen(m_query), 0, (struct sockaddr *)&destAddr, sizeof(destAddr))) <= 0)
+    //if((m_bytesSent = sendto(m_soc, m_query, (unsigned int)strlen(m_query), 0, (struct sockaddr *)&destAddr, sizeof(destAddr))) <= 0)
+    if((m_bytesSent = sendto(m_soc, &p_query, (unsigned int)sizeof(Packet), 0, (struct sockaddr *)&destAddr, sizeof(destAddr))) <= 0)
       DieWithError((char*)"sendto() sent a different number of bytes than expected");
     m_totalBytesSent += m_bytesSent;
     printf("Sent %u bits of %lu\n", m_totalBytesSent, strlen(m_query));
@@ -134,7 +135,8 @@ int main (int argc, char *argv[]) {
   printf("ServerMessage: \t");
   while(strchr(m_rcv, '\n') == NULL) {
     printf("Receiving Message\n");
-    if((m_bytesReceived = recvfrom(m_soc, m_rcv, BUFFSIZE-1, 0, (struct sockaddr *)&srcAddr, &fromSize)) <= 0)
+    //if((m_bytesReceived = recvfrom(m_soc, m_rcv, BUFFSIZE-1, 0, (struct sockaddr *)&srcAddr, &fromSize)) <= 0)
+    if((m_bytesReceived = recvfrom(m_soc, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&srcAddr, &fromSize)) <= 0)
       DieWithError((char*)"recv() failed or connection closed prematurely");
     printf("Receiving Message - After If\n");
     m_totalBytesReceived += m_bytesReceived;

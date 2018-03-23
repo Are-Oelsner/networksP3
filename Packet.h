@@ -66,7 +66,7 @@ class Packet {
 
     ///Helper Functions
     //www.cplusplus.com/forum/beginner/187933/
-    char* toBinary(int c);
+    char* toBinary(const int c);
 };
 
 #endif

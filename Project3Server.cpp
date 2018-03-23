@@ -11,7 +11,7 @@
 
 /* function declarations */
 // UDP Client handling function
-void HandleUDPClient(int sock, struct sockaddr_in clntAddr, unsigned int cliAddrLen, char* rcvBuffer); 
+void HandleUDPClient(int sock, struct sockaddr_in clntAddr, unsigned int cliAddrLen, Packet p_rcv); 
 
 
 int main (int argc, char *argv[]) {
@@ -80,6 +80,7 @@ int main (int argc, char *argv[]) {
 
   //int rcvMsgSize;                   // Bytes received
   //int totalBytesReceived;         // Tota bytes received 
+  Packet p_rcv;
 
   for(;;) {// while(true)
     clntLen = sizeof(clntAddr);       // Sets size of in-out parameter
@@ -88,7 +89,8 @@ int main (int argc, char *argv[]) {
     //totalBytesReceived = 0;
     //printf("ServerMessage: \t");
     //while(strchr(rcvBuffer, '\n') == NULL) {
-    if((recvMsgSize = recvfrom(sock, rcvBuffer, BUFFSIZE, 0, (struct sockaddr *)&clntAddr, &cliAddrLen)) < 0)
+    //if((recvMsgSize = recvfrom(sock, rcvBuffer, BUFFSIZE, 0, (struct sockaddr *)&clntAddr, &cliAddrLen)) < 0)
+    if((recvMsgSize = recvfrom(sock, &p_rcv, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, &cliAddrLen)) < 0)
       DieWithError((char*)"recvfrom() failed");
     if(clntAddr.sin_addr.s_addr != servAddr.sin_addr.s_addr) //TODO do I need this?
       DieWithError((char*)"Error: received a packet from unknown source.\n");
@@ -96,7 +98,8 @@ int main (int argc, char *argv[]) {
     //rcvBuffer[totalBytesReceived] = '\0'; 
     printf("Handling client %s\n", inet_ntoa(clntAddr.sin_addr));
     //}
-    HandleUDPClient(sock, clntAddr, cliAddrLen, rcvBuffer);
+    //HandleUDPClient(sock, clntAddr, cliAddrLen, rcvBuffer);
+    HandleUDPClient(sock, clntAddr, cliAddrLen, p_rcv);
 
 
   }
@@ -107,17 +110,15 @@ int main (int argc, char *argv[]) {
 }
 
 
-void HandleUDPClient(int sock, struct sockaddr_in clntAddr, unsigned int cliAddrLen, char* rcvBuffer) {
+void HandleUDPClient(int sock, struct sockaddr_in clntAddr, unsigned int cliAddrLen, Packet p_rcv) {
 
   /// Variables
-  Packet p_rcv;                     // Received Query Packet
   Packet p_msg;                     // Response Packet
   char* m_msg;             // Outgoing Response message
   char** data;
   int numEntries;
 
   // Construct Packet from received Query
-  p_rcv.parse(rcvBuffer);   
   p_rcv.printPacket();
 
   // Check database and return relevant data
@@ -135,6 +136,7 @@ void HandleUDPClient(int sock, struct sockaddr_in clntAddr, unsigned int cliAddr
 
   m_msg = p_msg.constructMSG();
 
+  printf("Sending Message: %s\n", p_msg.constructMSG());
   // Send Response message
   int bytesSent = 0;
   int totalBytesSent = 0;
