@@ -132,7 +132,8 @@ int main (int argc, char *argv[]) {
     printPacket(&p_rcv);
   }
 
-  printf("Response Received:\n");
+  if(debug)
+    printf("Response Received:\n");
 
   if(p_rcv.length > 0)
     printData(&p_rcv);
