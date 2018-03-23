@@ -1,7 +1,6 @@
 default:
-	g++ -Wall -fpermissive Project3Client.cpp -std=c++11 -o ProjectClient
-	echo ///////////////////////////////////////////////////////////////////
-	g++ -Wall -fpermissive Project3Server.cpp -std=c++11 -o ProjectServer
+	g++ -Wall -fpermissive Project3Client.cpp -std=c++11 -o Project3Client
+	g++ -Wall -fpermissive Project3Server.cpp -std=c++11 -o Project3Server
 
 client:
 	./Project3Client -h 141.166.207.144 -p 31201 -t 3 -i 3 -d mathcs04
@@ -11,8 +10,6 @@ client41:
 
 client1:
 	./ProjectClient -h mathcs01 -p 31201 -t 10 -i 3 -d mathcs04
-
-#	./Project3Client -f Are -l Oelsner -s :141.166.207.147:31201
 
 client41d:
 	./Project3Client -f Are -l Oelsner -s mathcs04:31201

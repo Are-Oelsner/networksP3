@@ -164,6 +164,8 @@ retransmit: // Goto label for retransmit after timeout
     printData(&p_rcv);
   else if(p_rcv.X == 1)
     printf("No users at hostname %s\n", hostname);
+  else
+    printf("Hostname (%s) not found\n", hostname);
 
   /// Close connection
   close(m_soc);
