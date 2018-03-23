@@ -105,20 +105,19 @@ int main (int argc, char *argv[]) {
     p_rsp.type     = 0x4;
     p_rsp.length   = numEntries;
     p_rsp.queryID  = p_rcv.queryID;
+    if(data != nullPtr)
+      setData(&p_rsp, data, numEntries); 
     p_rsp.checksum = 0x0000;
     p_rsp.checksum = checksum(&p_rsp);
-    setData(&p_rsp, data, numEntries); 
-    if(debug) {
-      printf("Packet to send-\n");
-      printPacket(&p_rsp);
 
-      printf("Sending Message:\n");
-    }
+    printPacket(&p_rsp);
+
+    printf("Sending Response:\n");
     // Send Response message
     if(sendto(sock, &p_rsp, sizeof(Packet), 0, (struct sockaddr *)&clntAddr, sizeof(clntAddr)) <= 0)
       DieWithError((char*)"sendto() sent a different number of bytes than expected");
-    if(debug)
-      printf("Message Sent\n");
+
+    printf("Message Sent\n");
 
   }
   close(sock);
